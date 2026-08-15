@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<rss version="2.0">
+<rss version="2.0"
+     xmlns:content="http://purl.org/rss/1.0/modules/content/"
+     xmlns:dc="http://purl.org/dc/elements/1.1/"
+     xmlns:media="http://search.yahoo.com/mrss/"
+     xmlns:atom="http://www.w3.org/2005/Atom"
+     xmlns:georss="http://www.georss.org/georss">
   <channel>
     <title>Алина Страховка — страхование простыми словами</title>
     <link>https://koss12345.github.io/insurgen-feed</link>
@@ -7,10 +12,21 @@
     <language>ru</language>
     <item>
       <title>InsurGen Social: тестовая публикация</title>
-      <link>https://koss12345.github.io/insurgen-feed/#7b392d21acbc4b39</link>
-      <guid isPermaLink="false">7b392d21acbc4b39</guid>
-      <pubDate>Sat, 15 Aug 2026 12:16:02 +0000</pubDate>
-      <description>Проверка RSS-ленты для Дзен через GitHub Pages.</description>
+      <link>https://koss12345.github.io/insurgen-feed/#4943c560053ba15b</link>
+      <guid isPermaLink="false">4943c560053ba15b</guid>
+      <pubDate>Sat, 15 Aug 2026 12:30:21 +0000</pubDate>
+      <description>Это тестовая запись подтверждает, что RSS-лента для Дзен собирается и публикуется на GitHub Pages.</description>
+      <enclosure url="https://koss12345.github.io/insurgen-feed/cover.jpg" type="image/jpeg"/>
+      <content:encoded><![CDATA[<h2>InsurGen Social: тестовая публикация</h2><p>Это тестовая запись подтверждает, что RSS-лента для Дзен собирается и публикуется на GitHub Pages.</p>]]></content:encoded>
+    </item>
+    <item>
+      <title>Что такое франшиза в КАСКО простыми словами</title>
+      <link>https://koss12345.github.io/insurgen-feed/#1894fb12d1c042f6</link>
+      <guid isPermaLink="false">1894fb12d1c042f6</guid>
+      <pubDate>Sat, 15 Aug 2026 12:30:18 +0000</pubDate>
+      <description>Франшиза — это сумма, которую вы платите сами при ДТП. Например, франшиза 30 тысяч рублей означает, что при ущербе 50 тысяч страховая заплатит только …</description>
+      <enclosure url="https://koss12345.github.io/insurgen-feed/cover.jpg" type="image/jpeg"/>
+      <content:encoded><![CDATA[<h2>Что такое франшиза в КАСКО простыми словами</h2><p>Франшиза — это сумма, которую вы платите сами при ДТП. Например, франшиза 30 тысяч рублей означает, что при ущербе 50 тысяч страховая заплатит только 20. Зато полис дешевле на 35-40 процентов. Выбирайте франшизу под свой бюджет и экономьте на страховке разумно.</p>]]></content:encoded>
     </item>
   </channel>
 </rss>
