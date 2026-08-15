@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>Алина Страховка — страхование простыми словами</title>
+    <link>https://koss12345.github.io/insurgen-feed</link>
+    <description>Разборы КАСКО, ОСАГО, ДМС и других видов страхования от Алины Страховки</description>
+    <language>ru</language>
+    <item>
+      <title>InsurGen Social: тестовая публикация</title>
+      <link>https://koss12345.github.io/insurgen-feed/#7b392d21acbc4b39</link>
+      <guid isPermaLink="false">7b392d21acbc4b39</guid>
+      <pubDate>Sat, 15 Aug 2026 12:16:02 +0000</pubDate>
+      <description>Проверка RSS-ленты для Дзен через GitHub Pages.</description>
+    </item>
+  </channel>
+</rss>
