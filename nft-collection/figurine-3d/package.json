@@ -1,0 +1,16 @@
+{
+  "name": "figurine-3d",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "gifenc": "^1.0.3",
+    "sharp": "^0.35.4"
+  }
+}
