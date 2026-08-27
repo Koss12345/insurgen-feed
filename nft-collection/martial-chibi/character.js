@@ -143,14 +143,25 @@ function eyesPath(style) {
         <ellipse cx="${HEAD_CX - ex - 10}" cy="${ey - 8}" rx="8" ry="4" fill="#ffffff" opacity="0.35"/>
         <ellipse cx="${HEAD_CX + ex - 14}" cy="${ey - 8}" rx="8" ry="4" fill="#ffffff" opacity="0.35"/>`;
     }
+    case 'dazed': {
+      // A KO-style X reads at a glance even shrunk to thumbnail size; a fine
+      // spiral (tried first) just disappeared into a dot at that scale.
+      const xMark = (cx, cy) =>
+        `<path d="M ${cx - 10},${cy - 10} L ${cx + 10},${cy + 10} M ${cx + 10},${cy - 10} L ${cx - 10},${cy + 10}"
+          stroke="${OUTLINE}" stroke-width="${HEAD_STROKE_THIN}" stroke-linecap="round"/>`;
+      return `${xMark(HEAD_CX - ex, ey)}${xMark(HEAD_CX + ex, ey)}`;
+    }
     default:
       return `${eyebrow(HEAD_CX - ex, ey, 0)}${eyebrow(HEAD_CX + ex, ey, 0)}
         ${pupil(HEAD_CX - ex, ey)}${pupil(HEAD_CX + ex, ey)}`;
   }
 }
 
-function mouthPath() {
+function mouthPath(style) {
   const my = HEAD_CY + 48;
+  if (style === 'dazed') {
+    return `<ellipse cx="${HEAD_CX}" cy="${my + 4}" rx="14" ry="10" fill="${OUTLINE}" opacity="0.85"/>`;
+  }
   return `<path d="M ${HEAD_CX - 18} ${my} q 18 15 36 0" stroke="${OUTLINE}" stroke-width="${HEAD_STROKE_W}" fill="none" stroke-linecap="round"/>`;
 }
 
@@ -304,4 +315,88 @@ function buildCharacterSvgGroup(traits) {
   `;
 }
 
-module.exports = { buildCharacterSvgGroup, lighten, darken };
+// Dizzy stars circling above a dazed head — the classic "just got hit" tell.
+function dizzyStars(cx, cy) {
+  const stars = [0, 120, 240].map((baseAngle, i) => {
+    const a = (baseAngle * Math.PI) / 180;
+    const sx = cx + Math.cos(a) * 44;
+    const sy = cy + Math.sin(a) * 16 - 8;
+    const pts = [];
+    for (let k = 0; k < 10; k++) {
+      const sa = (Math.PI / 5) * k - Math.PI / 2;
+      const r = k % 2 === 0 ? 9 : 4;
+      pts.push(`${sx + Math.cos(sa) * r},${sy + Math.sin(sa) * r}`);
+    }
+    return `<polygon points="${pts.join(' ')}" fill="#fff6c8" stroke="${OUTLINE}" stroke-width="2"/>`;
+  });
+  return `<g opacity="0.95">${stars.join('')}</g>`;
+}
+
+// The receiving end of a strike: staggered stance, arms thrown off-balance,
+// dazed spiral eyes. A fixed, trait-light "sparring partner" — the collection's
+// identity/rarity lives in the attacker, this is just who they're hitting.
+function buildDefenderSvgGroup(traits) {
+  const { skin, gi, belt, hair, hairColor } = traits;
+
+  const defs = `
+    ${grad3('skinGrad', skin)}
+    ${grad3('hairGrad', hairColor)}
+    ${grad3('giGrad', gi)}
+    ${grad3('giSleeveGrad', darken(gi, 0.08))}
+    ${grad3('beltGrad', belt)}
+  `;
+
+  return `
+    <defs>${defs}</defs>
+    <g transform="rotate(10 250 340)">
+      <ellipse cx="250" cy="432" rx="92" ry="17" fill="#00000030"/>
+
+      <!-- flailing back arm, thrown up and away -->
+      <path d="M 314 258 C 336 226 352 190 356 156 C 344 154 330 168 320 192
+        C 308 218 300 240 296 260 Z"
+        fill="url(#giSleeveGrad)" stroke="${OUTLINE}" stroke-width="${OUTLINE_W}" stroke-linejoin="round"/>
+      <circle cx="350" cy="152" r="18" fill="url(#skinGrad)" stroke="${OUTLINE}" stroke-width="${OUTLINE_W}"/>
+
+      <!-- staggered legs -->
+      <path d="M 214 340 C 200 364 188 390 180 416 L 206 420 C 216 394 226 368 234 342 Z"
+        fill="url(#giGrad)" stroke="${OUTLINE}" stroke-width="${OUTLINE_W}" stroke-linejoin="round"/>
+      ${bareFoot(192, 418, skin, false, -18)}
+      <path d="M 286 340 C 292 364 296 390 294 416 L 320 416 C 324 390 322 364 312 340 Z"
+        fill="url(#giGrad)" stroke="${OUTLINE}" stroke-width="${OUTLINE_W}" stroke-linejoin="round"/>
+      ${bareFoot(307, 418, skin, true, 10)}
+      ${contactShadow('M 183 372 Q 196 380 202 372 L 202 379 Q 196 387 183 379 Z')}
+
+      <!-- gi top, tilted with the stagger -->
+      <path d="M 190 258 C 176 288, 176 316, 194 340 L 306 340 C 324 316, 324 288, 310 258
+        C 297 240, 270 230, 250 230 C 230 230, 203 240, 190 258 Z"
+        fill="url(#giGrad)" stroke="${OUTLINE}" stroke-width="${OUTLINE_W}" stroke-linejoin="round"/>
+      <path d="M 216 244 L 250 300 L 284 244" stroke="${darken(gi, 0.35)}" stroke-width="4" fill="none" opacity="0.5" stroke-linecap="round"/>
+      <rect x="185" y="296" width="130" height="24" fill="url(#beltGrad)" stroke="${OUTLINE}" stroke-width="${OUTLINE_W * 0.75}"/>
+      ${contactShadow('M 193 262 Q 250 280 307 262 L 304 272 Q 250 290 196 272 Z')}
+
+      <!-- front arm, flung out to the side -->
+      <path d="M 186 256 C 152 262 122 268 96 268 C 94 258 100 248 112 246
+        C 140 244 168 248 194 258 Z"
+        fill="url(#giSleeveGrad)" stroke="${OUTLINE}" stroke-width="${OUTLINE_W}" stroke-linejoin="round"/>
+      <circle cx="100" cy="257" r="17" fill="url(#skinGrad)" stroke="${OUTLINE}" stroke-width="${OUTLINE_W}"/>
+
+      <!-- neck -->
+      <rect x="228" y="235" width="44" height="26" rx="10" fill="url(#skinGrad)"/>
+
+      <!-- head -->
+      <g transform="${HEAD_TRANSFORM}">
+        <circle cx="${HEAD_CX}" cy="${HEAD_CY}" r="${HEAD_R}" fill="url(#skinGrad)" stroke="${OUTLINE}" stroke-width="${OUTLINE_W / HEAD_SCALE}"/>
+        <path d="M 165 ${HEAD_CY + 40} Q 250 ${HEAD_CY + 100} 335 ${HEAD_CY + 40} Q 305 ${HEAD_CY + 82} 250 ${HEAD_CY + 86} Q 195 ${HEAD_CY + 82} 165 ${HEAD_CY + 40} Z"
+          fill="${darken(skin, 0.12)}" opacity="0.4"/>
+        ${blush()}
+        ${eyesPath('dazed')}
+        ${mouthPath('dazed')}
+        <ellipse cx="${HEAD_CX - 38}" cy="${HEAD_CY - 30}" rx="32" ry="21" fill="#ffffff" opacity="0.22"/>
+        ${hairPath(hair)}
+      </g>
+      ${dizzyStars(250, 90)}
+    </g>
+  `;
+}
+
+module.exports = { buildCharacterSvgGroup, buildDefenderSvgGroup, lighten, darken };
