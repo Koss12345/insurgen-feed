@@ -136,7 +136,10 @@ async function main() {
     const metadata = {
       name: `Insurgen Ballers #${number}`,
       description: 'Insurgen Ballers — a procedurally generated collection of 100 unique chibi footballers on TON.',
-      image: baseUri ? `${baseUri}images/${id}.gif` : `./images/${id}.gif`,
+      // --base-uri is expected to point directly at the uploaded *images* folder's
+      // own IPFS root (i.e. you uploaded chibi-spin/output/collection/images as its
+      // own folder), so no extra "images/" path segment here.
+      image: baseUri ? `${baseUri}${id}.gif` : `./images/${id}.gif`,
       attributes,
     };
     fs.writeFileSync(path.join(metadataDir, `${id}.json`), JSON.stringify(metadata, null, 2));
@@ -152,14 +155,20 @@ async function main() {
     }
   }
 
+  // Uses token #0's actual (already-uploaded) image rather than a separate
+  // cover.png, so the collection-level preview doesn't depend on a second file
+  // that would need its own IPFS path bookkeeping.
   const collectionMetadata = {
     name: 'Insurgen Ballers',
     description: 'A procedurally generated collection of 100 unique chibi footballers, minted on TON.',
-    image: baseUri ? `${baseUri}cover.png` : './cover.png',
-    cover_image: baseUri ? `${baseUri}cover.png` : './cover.png',
+    image: baseUri ? `${baseUri}0.gif` : './images/0.gif',
+    cover_image: baseUri ? `${baseUri}0.gif` : './images/0.gif',
     social_links: [],
   };
-  fs.writeFileSync(path.join(args.out, 'collection.json'), JSON.stringify(collectionMetadata, null, 2));
+  // Written into metadataDir (not args.out) so that uploading the metadata/
+  // folder as its own IPFS unit carries collection.json along with it —
+  // COLLECTION_CONTENT_URI is <METADATA_CID>/collection.json.
+  fs.writeFileSync(path.join(metadataDir, 'collection.json'), JSON.stringify(collectionMetadata, null, 2));
 
   const rarityReport = {};
   for (const cat of CATEGORY_ORDER) {
