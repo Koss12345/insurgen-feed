@@ -16,8 +16,8 @@ const HEAD_CY = 142;
 const HEAD_R = 108;
 
 // Final on-body placement: smaller radius, sitting right on the collar.
-const HEAD_FINAL_R = 86;
-const HEAD_FINAL_CY = 152;
+const HEAD_FINAL_R = 68;
+const HEAD_FINAL_CY = 170;
 const HEAD_SCALE = HEAD_FINAL_R / HEAD_R;
 const HEAD_TRANSFORM = `translate(${HEAD_CX},${HEAD_FINAL_CY}) scale(${HEAD_SCALE}) translate(${-HEAD_CX},${-HEAD_CY})`;
 // Everything drawn inside HEAD_TRANSFORM (hair/eyes/mouth) is shrunk along with
@@ -278,17 +278,25 @@ function buildCharacterSvgGroup(traits) {
       fill="url(#shortsGrad)" stroke="${OUTLINE}" stroke-width="${OUTLINE_W}" stroke-linejoin="round"/>
     ${contactShadow('M 200 335 Q 250 348 300 335 L 300 342 Q 250 355 200 342 Z')}
 
-    <!-- torso / jersey -->
-    <path d="M 190 258 C 176 288, 176 316, 194 340 L 306 340 C 324 316, 324 288, 310 258
-      C 297 240, 270 230, 250 230 C 230 230, 203 240, 190 258 Z"
+    <!-- torso / jersey: wide shoulders tapering to a waist, flaring back out at the hem -->
+    <path d="M 184 256 C 175 266 174 272 178 278 C 182 288 196 296 200 305
+      C 198 318 194 330 192 340 L 308 340 C 306 330 302 318 300 305
+      C 304 296 318 288 322 278 C 326 272 325 266 316 256
+      C 300 236 272 226 250 226 C 228 226 200 236 184 256 Z"
       fill="url(#jerseyGrad)" stroke="${OUTLINE}" stroke-width="${OUTLINE_W}" stroke-linejoin="round"/>
+    <!-- deltoid + pec shading for an athletic build, not a soft blob -->
+    <ellipse cx="185" cy="264" rx="15" ry="19" fill="${darken(jersey, 0.12)}" opacity="0.3" transform="rotate(-18 185 264)"/>
+    <ellipse cx="315" cy="264" rx="15" ry="19" fill="${darken(jersey, 0.12)}" opacity="0.3" transform="rotate(18 315 264)"/>
+    <path d="M 250 244 C 248 268 250 292 250 322" stroke="${darken(jersey, 0.28)}" stroke-width="2.5" fill="none" opacity="0.4"/>
+    <path d="M 214 258 Q 230 270 227 284" stroke="${darken(jersey, 0.22)}" stroke-width="2" fill="none" opacity="0.35"/>
+    <path d="M 286 258 Q 270 270 273 284" stroke="${darken(jersey, 0.22)}" stroke-width="2" fill="none" opacity="0.35"/>
     <text x="250" y="300" font-family="Arial, sans-serif" font-weight="900" font-size="50" fill="#ffffff" text-anchor="middle" stroke="${darken(jersey, 0.4)}" stroke-width="1.5">${number}</text>
     ${contactShadow('M 193 262 Q 250 280 307 262 L 304 272 Q 250 290 196 272 Z')}
 
     ${frontArm}
 
     <!-- neck -->
-    <rect x="228" y="235" width="44" height="26" fill="url(#skinGrad)"/>
+    <rect x="228" y="235" width="44" height="26" rx="10" fill="url(#skinGrad)"/>
 
     <!-- head (authored large, then scaled down onto the body as one unit) -->
     <g transform="${HEAD_TRANSFORM}">

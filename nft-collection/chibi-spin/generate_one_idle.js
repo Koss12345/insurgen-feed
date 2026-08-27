@@ -16,7 +16,7 @@ async function main() {
     skin: '#f0b389',
     jersey: '#c8102e',
     shorts: '#161616',
-    boots: '#f2f2f2',
+    boots: '#ff6a00',
     hair: 'spiky',
     hairColor: '#151515',
     eyes: 'determined',
