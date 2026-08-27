@@ -1,0 +1,13 @@
+{
+  "name": "insurgen-bots-generator",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Generative art + TEP-64 metadata generator for the Insurgen Bots NFT collection (TON).",
+  "main": "generate.js",
+  "scripts": {
+    "generate": "node generate.js"
+  },
+  "dependencies": {
+    "sharp": "^0.35.4"
+  }
+}

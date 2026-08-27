@@ -1,0 +1,31 @@
+{
+  "name": "Insurgen Bots #71",
+  "description": "Insurgen Bots — a procedurally generated collection of 100 unique on-chain characters on TON.",
+  "image": "https://your-cdn-or-ipfs-gateway/insurgen-bots/images/71.png",
+  "attributes": [
+    {
+      "trait_type": "Background",
+      "value": "Slate"
+    },
+    {
+      "trait_type": "Shape",
+      "value": "Star"
+    },
+    {
+      "trait_type": "Pattern",
+      "value": "Dots"
+    },
+    {
+      "trait_type": "Eyes",
+      "value": "Round"
+    },
+    {
+      "trait_type": "Mouth",
+      "value": "Smile"
+    },
+    {
+      "trait_type": "Accessory",
+      "value": "Halo"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "projects": [
+    {
+      "name": "InsurgenBots",
+      "path": "./nft.tact",
+      "output": "./output",
+      "options": {
+        "debug": true
+      }
+    }
+  ]
+}

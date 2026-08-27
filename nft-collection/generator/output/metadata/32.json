@@ -1,0 +1,31 @@
+{
+  "name": "Insurgen Bots #32",
+  "description": "Insurgen Bots — a procedurally generated collection of 100 unique on-chain characters on TON.",
+  "image": "https://your-cdn-or-ipfs-gateway/insurgen-bots/images/32.png",
+  "attributes": [
+    {
+      "trait_type": "Background",
+      "value": "Ocean"
+    },
+    {
+      "trait_type": "Shape",
+      "value": "Circle"
+    },
+    {
+      "trait_type": "Pattern",
+      "value": "Solid"
+    },
+    {
+      "trait_type": "Eyes",
+      "value": "Wink"
+    },
+    {
+      "trait_type": "Mouth",
+      "value": "Fangs"
+    },
+    {
+      "trait_type": "Accessory",
+      "value": "Cap"
+    }
+  ]
+}
