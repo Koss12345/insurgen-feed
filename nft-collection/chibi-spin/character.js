@@ -74,8 +74,10 @@ function hairPath(style) {
         ${hairShine('hairClip')}`;
     }
     case 'afro':
-      return `<clipPath id="hairClip"><circle cx="250" cy="82" r="104"/></clipPath>
-        <circle cx="250" cy="82" r="104" fill="url(#hairGrad)" stroke="${OUTLINE}" stroke-width="${HEAD_STROKE_W}"/>
+      // Kept above the brow line (bottom edge ~138, eyes sit at ~156) so it frames
+      // the head without covering the face — a full-radius circle here would.
+      return `<clipPath id="hairClip"><circle cx="250" cy="58" r="80"/></clipPath>
+        <circle cx="250" cy="58" r="80" fill="url(#hairGrad)" stroke="${OUTLINE}" stroke-width="${HEAD_STROKE_W}"/>
         ${hairShine('hairClip')}`;
     case 'buzz': {
       const d = `M 152 95 C 150 28, 200 20, 250 20 C 300 20, 350 28, 348 95

@@ -1,0 +1,51 @@
+{
+  "name": "Insurgen Ballers #90",
+  "description": "Insurgen Ballers — a procedurally generated collection of 100 unique chibi footballers on TON.",
+  "image": "https://your-cdn-or-ipfs-gateway/insurgen-ballers/images/89.gif",
+  "attributes": [
+    {
+      "trait_type": "Background",
+      "value": "Slate"
+    },
+    {
+      "trait_type": "Skin",
+      "value": "Fair"
+    },
+    {
+      "trait_type": "HairStyle",
+      "value": "Afro"
+    },
+    {
+      "trait_type": "HairColor",
+      "value": "Chestnut"
+    },
+    {
+      "trait_type": "Jersey",
+      "value": "Cobalt"
+    },
+    {
+      "trait_type": "Shorts",
+      "value": "Black"
+    },
+    {
+      "trait_type": "Boots",
+      "value": "Classic Black"
+    },
+    {
+      "trait_type": "Expression",
+      "value": "Focused"
+    },
+    {
+      "trait_type": "Prop",
+      "value": "Ball"
+    },
+    {
+      "trait_type": "ArmPose",
+      "value": "Relaxed"
+    },
+    {
+      "trait_type": "Number",
+      "value": "90"
+    }
+  ]
+}

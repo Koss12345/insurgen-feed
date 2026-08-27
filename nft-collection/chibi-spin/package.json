@@ -1,14 +1,13 @@
 {
-  "name": "chibi-spin",
+  "name": "insurgen-ballers-chibi-generator",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "private": true,
+  "description": "Chibi footballer generative art + TEP-64 metadata generator for the Insurgen Ballers NFT collection (TON). Idle-animated GIFs (blink + breathing bob + prop sparkle), no rotation.",
+  "main": "generate_all.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "generate": "node generate_all.js",
+    "preview": "node generate_all.js --count 1 --out ./output/preview"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
   "dependencies": {
     "gifenc": "^1.0.3",
     "sharp": "^0.35.4"
