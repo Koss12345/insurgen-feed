@@ -45,8 +45,9 @@ async function main() {
 
   await collection.send(sender, { value: toNano('0.15') }, null);
 
+  const explorerHost = endpoint.includes('testnet') ? 'testnet.tonviewer.com' : 'tonviewer.com';
   console.log('Deploy transaction sent. Wait for confirmation, then check the address on an explorer:');
-  console.log(`  https://testnet.tonviewer.com/${collection.address.toString()}`);
+  console.log(`  https://${explorerHost}/${collection.address.toString()}`);
   console.log('Once confirmed, set COLLECTION_ADDRESS and run mint.ts to mint all items.');
 }
 
