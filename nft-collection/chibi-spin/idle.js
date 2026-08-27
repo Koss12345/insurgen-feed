@@ -24,7 +24,7 @@ function buildIdleFrame(baseTraits, frameIndex, totalFrames, backgroundColor, pa
   const sparkleWindow = 0.12;
   const sparkleDelta = Math.abs(t - sparkleCenter);
   const sparkleIntensity = sparkleDelta < sparkleWindow ? 1 - sparkleDelta / sparkleWindow : 0;
-  const sparkle = baseTraits.prop === 'ball' ? sparkleOverlay(368, 318, sparkleIntensity, t * 10) : '';
+  const sparkle = baseTraits.prop === 'ball' ? sparkleOverlay(374, 402, sparkleIntensity, t * 10) : '';
 
   const characterGroup = buildCharacterSvgGroup(traits);
 
