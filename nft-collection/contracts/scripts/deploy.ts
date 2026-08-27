@@ -10,7 +10,10 @@ import { NftCollection } from '../output/InsurgenBots_NftCollection';
 //   MNEMONIC                24-word wallet seed phrase (the collection owner + gas payer)
 //   TON_ENDPOINT             e.g. https://testnet.toncenter.com/api/v2/jsonRPC
 //   TON_API_KEY              toncenter API key (get one for free at https://t.me/tonapibot)
-//   COLLECTION_CONTENT_URI   e.g. https://<ipfs-gateway>/<cid>/collection.json
+//   COLLECTION_CONTENT_URI   e.g. https://<ipfs-gateway>/<metadata-cid>/collection.json
+//   ITEM_BASE_URI            directory each item's "<index>.json" is appended to —
+//                            e.g. https://<ipfs-gateway>/<metadata-cid>/ (same folder
+//                            as COLLECTION_CONTENT_URI, just without the filename)
 //   ROYALTY_DESTINATION      address to receive royalties (defaults to the deployer)
 //   MAX_SUPPLY               defaults to 100
 
@@ -19,6 +22,7 @@ async function main() {
   const endpoint = requireEnv('TON_ENDPOINT');
   const apiKey = process.env.TON_API_KEY;
   const collectionContentUri = requireEnv('COLLECTION_CONTENT_URI');
+  const itemBaseUri = requireEnv('ITEM_BASE_URI');
   const maxSupply = BigInt(process.env.MAX_SUPPLY ?? '100');
 
   const client = new TonClient({ endpoint, apiKey });
@@ -32,7 +36,7 @@ async function main() {
     : wallet.address;
 
   const collection = client.open(
-    await NftCollection.fromInit(wallet.address, maxSupply, collectionContentUri, {
+    await NftCollection.fromInit(wallet.address, maxSupply, collectionContentUri, itemBaseUri, {
       $$type: 'RoyaltyParams',
       numerator: 5n,
       denominator: 100n,

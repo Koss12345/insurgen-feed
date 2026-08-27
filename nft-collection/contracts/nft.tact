@@ -95,12 +95,19 @@ contract NftCollection {
     nextItemIndex: Int as uint64 = 0;
     maxSupply: Int as uint64;
     collectionContent: Cell;
+    // Directory-style base (e.g. ".../<METADATA_CID>/") each item's "<index>.json"
+    // is appended to, so every minted item gets a complete, directly-resolvable
+    // URI instead of a bare relative filename indexers have no base to combine
+    // it with (that combination is what the TEP-62 get_nft_content getter is
+    // for — storing the full URI up front sidesteps needing it at all).
+    itemBaseUri: String;
     royaltyParams: RoyaltyParams;
 
-    init(owner: Address, maxSupply: Int, collectionContentUri: String, royaltyParams: RoyaltyParams) {
+    init(owner: Address, maxSupply: Int, collectionContentUri: String, itemBaseUri: String, royaltyParams: RoyaltyParams) {
         self.owner = owner;
         self.maxSupply = maxSupply;
         self.collectionContent = createOffchainContent(collectionContentUri);
+        self.itemBaseUri = itemBaseUri;
         self.royaltyParams = royaltyParams;
     }
 
@@ -130,7 +137,7 @@ contract NftCollection {
     }
 
     fun mintItem(itemOwner: Address, index: Int, queryId: Int) {
-        let indexUri: String = beginString().concat(index.toString()).concat(".json").toString();
+        let itemUri: String = beginString().concat(self.itemBaseUri).concat(index.toString()).concat(".json").toString();
         let init: StateInit = computeItemInit(myAddress(), index);
         send(SendParameters{
             to: contractAddress(init),
@@ -142,7 +149,7 @@ contract NftCollection {
             body: InitializeItem{
                 queryId: queryId,
                 itemOwner: itemOwner,
-                individualContent: createOffchainContent(indexUri)
+                individualContent: createOffchainContent(itemUri)
             }.toCell()
         });
     }
@@ -177,6 +184,15 @@ contract NftCollection {
     get fun get_nft_address_by_index(index: Int): Address {
         let init: StateInit = computeItemInit(myAddress(), index);
         return contractAddress(init);
+    }
+
+    // Standard TEP-62 getter. individualContent is already a complete absolute
+    // URI (see mintItem), so this is a spec-compliant passthrough rather than a
+    // real combine — but its presence matters: indexers call this method to
+    // resolve per-item metadata, and its absence is what broke resolution
+    // before this fix.
+    get fun get_nft_content(index: Int, individualContent: Cell): Cell {
+        return individualContent;
     }
 
     get fun royalty_params(): RoyaltyParams {

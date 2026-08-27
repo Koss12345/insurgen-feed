@@ -16,7 +16,7 @@ async function main() {
   const royaltyDest: SandboxContract<TreasuryContract> = await blockchain.treasury('royalty');
 
   const collection = blockchain.openContract(
-    await NftCollection.fromInit(owner.address, 100n, 'https://example.com/collection.json', {
+    await NftCollection.fromInit(owner.address, 100n, 'https://example.com/collection.json', 'https://example.com/', {
       $$type: 'RoyaltyParams',
       numerator: 5n,
       denominator: 100n,
@@ -38,6 +38,20 @@ async function main() {
   assertTrue(item0Data.isInitialized, 'item #0 is initialized');
   assertTrue(item0Data.ownerAddress.equals(owner.address), 'item #0 owner is the collection owner');
   assertTrue(item0Data.index === 0n, 'item #0 index is 0');
+
+  // Regression test: this is exactly the bug that shipped once already — an
+  // indexer (Getgems) has no way to resolve a bare relative "0.json" against
+  // the collection's own content URI, so the item content must be a complete,
+  // directly-fetchable URI on its own.
+  const item0ContentSlice = item0Data.individualContent.beginParse();
+  const offchainPrefix = item0ContentSlice.loadUint(8);
+  const item0Uri = item0ContentSlice.loadStringTail();
+  assertTrue(offchainPrefix === 0x01, 'item #0 content uses the off-chain (0x01) prefix');
+  assertTrue(item0Uri === 'https://example.com/0.json', `item #0 content is a full absolute URI (got "${item0Uri}")`);
+
+  const getNftContentResult = await collection.getGetNftContent(0n, item0Data.individualContent);
+  const resolvedUri = getNftContentResult.beginParse().skip(8).loadStringTail();
+  assertTrue(resolvedUri === 'https://example.com/0.json', `get_nft_content resolves to the same full URI (got "${resolvedUri}")`);
 
   console.log('--- Batch mint remaining 99, in batches of <=30 (the contract-enforced cap) ---');
   let queryId = 2n;

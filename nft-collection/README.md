@@ -83,10 +83,14 @@ npm run generate -- --count 100 --seed 1337 --base-uri https://gateway.pinata.cl
 ```
 
 Then upload the regenerated `metadata/` folder itself and note *that* CID —
-you'll need `https://<gateway>/ipfs/<METADATA_CID>/collection.json` as
-`COLLECTION_CONTENT_URI` in the next step. Each item's on-chain content
-pointer (set by the contract at mint time) is `<index>.json`, so it must
-resolve against the same base as `collection.json`.
+you'll need both, in the next step:
+- `COLLECTION_CONTENT_URI` = `https://<gateway>/ipfs/<METADATA_CID>/collection.json`
+- `ITEM_BASE_URI` = `https://<gateway>/ipfs/<METADATA_CID>/` (same folder, no filename)
+
+The contract builds each item's full metadata URL itself at mint time as
+`ITEM_BASE_URI + "<index>.json"` — every item ends up with a complete,
+directly-fetchable URI, not a bare relative filename an indexer has no base
+to resolve it against.
 
 ## 3. Compile, test, and deploy the contract
 
@@ -107,7 +111,7 @@ works unchanged regardless of which generator produced the metadata.
 To deploy for real:
 
 ```bash
-cp .env.example .env    # fill in MNEMONIC, TON_ENDPOINT, TON_API_KEY, COLLECTION_CONTENT_URI
+cp .env.example .env    # fill in MNEMONIC, TON_ENDPOINT, TON_API_KEY, COLLECTION_CONTENT_URI, ITEM_BASE_URI
 npm run deploy           # -> prints the collection address
 # put that address into .env as COLLECTION_ADDRESS, then:
 npm run mint              # mints all 100 items in batches of 30
