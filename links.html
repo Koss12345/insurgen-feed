@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Страхование это просто:)</title>
+<meta name="description" content="Все ссылки — оформить полис, каналы в Telegram, MAX и VK">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=PT+Serif:wght@700&family=Golos+Text:wght@400;500;600;700&display=swap">
+<style>
+  :root {
+    --ink: #17223B;
+    --ink-soft: #4B5670;
+    --paper: #EEF0F5;
+    --surface: #FFFFFF;
+    --accent: #C86A2A;
+    --accent-ink: #7A3E12;
+    --accent-soft: #F3E2D2;
+    --line: #DBDFE7;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ink: #E7EAF2; --ink-soft: #AEB6C7; --paper: #10131B; --surface: #1A1E2A;
+      --accent: #E38C4A; --accent-ink: #F4C495; --accent-soft: #3A2A1C; --line: #2B303E;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--paper); color: var(--ink);
+    font-family: 'Golos Text', 'PT Sans', Arial, sans-serif;
+    min-height: 100vh; display: flex; justify-content: center;
+    padding: 48px 20px;
+  }
+  .card { width: 100%; max-width: 420px; }
+  .avatar {
+    width: 84px; height: 84px; border-radius: 50%; margin: 0 auto 16px;
+    background: var(--surface); border: 1px solid var(--line);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'PT Serif', serif; font-size: 34px; color: var(--accent-ink);
+  }
+  h1 {
+    font-family: 'PT Serif', serif; font-size: 22px; text-align: center;
+    margin: 0 0 6px;
+  }
+  .bio {
+    text-align: center; color: var(--ink-soft); font-size: 14px;
+    max-width: 34ch; margin: 0 auto 32px; line-height: 1.5;
+  }
+  .links { display: flex; flex-direction: column; gap: 12px; }
+  a.btn {
+    display: flex; align-items: center; gap: 14px;
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: 14px; padding: 16px 18px;
+    text-decoration: none; color: var(--ink);
+    font-weight: 600; font-size: 15.5px;
+    transition: transform 0.12s ease, border-color 0.12s ease;
+  }
+  a.btn:active { transform: scale(0.98); }
+  a.btn.primary {
+    background: var(--accent-ink); border-color: var(--accent-ink); color: #fff;
+  }
+  a.btn.primary .sub { color: rgba(255,255,255,0.75); }
+  .icon {
+    width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 19px; background: var(--accent-soft); color: var(--accent-ink);
+  }
+  a.btn.primary .icon { background: rgba(255,255,255,0.16); color: #fff; }
+  .label { display: flex; flex-direction: column; gap: 2px; }
+  .sub { font-weight: 400; font-size: 12.5px; color: var(--ink-soft); }
+  footer { text-align: center; margin-top: 36px; font-size: 12px; color: var(--ink-soft); }
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="avatar">С</div>
+    <h1>Страхование это просто:)</h1>
+    <p class="bio">ОСАГО, каско, жизнь, здоровье, имущество — объясняем простым языком. Выберите, куда перейти:</p>
+    <div class="links">
+      <a class="btn primary" href="https://t.me/Polis1_bot/zozopolis" target="_blank" rel="noopener">
+        <span class="icon">✓</span>
+        <span class="label">Оформить полис<span class="sub">бот в Telegram — за пару минут</span></span>
+      </a>
+      <a class="btn primary" href="https://max.ru/se14032616_bot" target="_blank" rel="noopener">
+        <span class="icon">✓</span>
+        <span class="label">Оформить полис<span class="sub">бот в MAX</span></span>
+      </a>
+      <a class="btn" href="https://t.me/strahovka_alina" target="_blank" rel="noopener">
+        <span class="icon">✈</span>
+        <span class="label">Канал в Telegram<span class="sub">@strahovka_alina — разборы и новости</span></span>
+      </a>
+      <a class="btn" href="https://max.ru/se14032616_biz" target="_blank" rel="noopener">
+        <span class="icon">●</span>
+        <span class="label">Канал в MAX<span class="sub">та же лента, что и в Telegram</span></span>
+      </a>
+      <a class="btn" href="https://vk.com/club240868525" target="_blank" rel="noopener">
+        <span class="icon">▶</span>
+        <span class="label">Сообщество ВКонтакте<span class="sub">club240868525</span></span>
+      </a>
+    </div>
+    <footer>strahovka_zozo · Instagram</footer>
+  </div>
+</body>
+</html>
