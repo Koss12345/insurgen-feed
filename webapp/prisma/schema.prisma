@@ -1,0 +1,77 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// A lead/application submitted after the user picked a quote in the
+// calculator. `params` and the quote fields are a snapshot of what the
+// user saw at submission time, kept even if pricing logic changes later.
+model Application {
+  id String @id @default(cuid())
+
+  type   String // InsuranceType: "osago" | "kasko" | "dms" | "travel"
+  params String // JSON-stringified form params the quote was computed from
+
+  insurerId       String
+  insurerName     String
+  premium         Float
+  coverageSummary String
+
+  contactName  String
+  contactPhone String
+  contactEmail String?
+
+  consent Boolean @default(false)
+  status  String  @default("new") // "new" | "contacted" | "issued" | "cancelled"
+
+  createdAt DateTime @default(now())
+}
+
+// A draft of the contact step the user hasn't submitted yet — captured so
+// a manager can still follow up on an abandoned application. Deleted once
+// the matching Application is created (see /api/applications).
+model PartialLead {
+  id String @id @default(cuid())
+
+  type   String
+  params String // JSON-stringified
+
+  insurerId   String?
+  insurerName String?
+  premium     Float?
+
+  contactName  String?
+  contactPhone String?
+  contactEmail String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// "Order a callback" widget — a much shorter form than the full quote
+// flow, for visitors who don't want to go through the calculator.
+model CallbackRequest {
+  id      String  @id @default(cuid())
+  name    String
+  phone   String
+  comment String?
+  status  String  @default("new") // "new" | "contacted" | "cancelled"
+
+  createdAt DateTime @default(now())
+}
+
+model AdminUser {
+  id           String @id @default(cuid())
+  email        String @unique
+  passwordHash String
+
+  createdAt DateTime @default(now())
+}
