@@ -34,3 +34,44 @@ model Application {
 
   createdAt DateTime @default(now())
 }
+
+// A draft of the contact step the user hasn't submitted yet — captured so
+// a manager can still follow up on an abandoned application. Deleted once
+// the matching Application is created (see /api/applications).
+model PartialLead {
+  id String @id @default(cuid())
+
+  type   String
+  params String // JSON-stringified
+
+  insurerId   String?
+  insurerName String?
+  premium     Float?
+
+  contactName  String?
+  contactPhone String?
+  contactEmail String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// "Order a callback" widget — a much shorter form than the full quote
+// flow, for visitors who don't want to go through the calculator.
+model CallbackRequest {
+  id      String  @id @default(cuid())
+  name    String
+  phone   String
+  comment String?
+  status  String  @default("new") // "new" | "contacted" | "cancelled"
+
+  createdAt DateTime @default(now())
+}
+
+model AdminUser {
+  id           String @id @default(cuid())
+  email        String @unique
+  passwordHash String
+
+  createdAt DateTime @default(now())
+}

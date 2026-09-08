@@ -1,11 +1,16 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { INSURANCE_TYPES, getInsuranceTypeConfig, isInsuranceType } from "@/lib/insurers/fields";
 import type { InsuranceType, Quote, QuoteParamValue } from "@/lib/insurers/types";
+import { trackEvent } from "@/lib/analytics";
 
 type Step = "type" | "form" | "quotes" | "contact" | "success";
+type SortOrder = "asc" | "desc";
+
+const STEP_ORDER: Step[] = ["type", "form", "quotes", "contact"];
+const DRAFT_KEY = "quote-draft";
 
 function defaultParams(type: InsuranceType): Record<string, QuoteParamValue> {
   const config = getInsuranceTypeConfig(type);
@@ -16,23 +21,94 @@ function defaultParams(type: InsuranceType): Record<string, QuoteParamValue> {
   return params;
 }
 
+function loadDraft(): { type: InsuranceType; params: Record<string, QuoteParamValue> } | null {
+  try {
+    const raw = localStorage.getItem(DRAFT_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (typeof parsed?.type === "string" && isInsuranceType(parsed.type) && typeof parsed.params === "object") {
+      return { type: parsed.type, params: parsed.params };
+    }
+  } catch {
+    // localStorage can throw (private mode, disabled) or hold garbage — a missing draft is fine.
+  }
+  return null;
+}
+
 const currency = new Intl.NumberFormat("ru-RU", { style: "currency", currency: "RUB", maximumFractionDigits: 0 });
 
 export default function QuoteWizard({ initialType }: { initialType?: string }) {
   const startType = initialType && isInsuranceType(initialType) ? initialType : undefined;
 
-  const [step, setStep] = useState<Step>(startType ? "form" : "type");
-  const [type, setType] = useState<InsuranceType | undefined>(startType);
-  const [params, setParams] = useState<Record<string, QuoteParamValue>>(startType ? defaultParams(startType) : {});
+  // Restore an in-progress draft when landing on /quote with no explicit
+  // type in the URL. useState's lazy initializer runs exactly once (unlike
+  // useMemo, which is only a performance hint), so this is a safe place
+  // for the one-time localStorage read.
+  const [initialDraft] = useState(() => (startType ? null : loadDraft()));
+
+  const [step, setStep] = useState<Step>(startType || initialDraft ? "form" : "type");
+  const [type, setType] = useState<InsuranceType | undefined>(startType ?? initialDraft?.type);
+  const [params, setParams] = useState<Record<string, QuoteParamValue>>(
+    startType ? defaultParams(startType) : (initialDraft?.params ?? {}),
+  );
   const [quotes, setQuotes] = useState<Quote[]>([]);
+  const [sortOrder, setSortOrder] = useState<SortOrder>("asc");
   const [selectedQuote, setSelectedQuote] = useState<Quote | null>(null);
   const [contact, setContact] = useState({ name: "", phone: "", email: "" });
+  const [website, setWebsite] = useState(""); // honeypot
   const [consent, setConsent] = useState(false);
   const [applicationId, setApplicationId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const draftIdRef = useRef<string | null>(null);
 
   const config = useMemo(() => (type ? getInsuranceTypeConfig(type) : undefined), [type]);
+
+  const cheapestId = useMemo(
+    () => (quotes.length ? quotes.reduce((a, b) => (b.premium < a.premium ? b : a)).insurerId : null),
+    [quotes],
+  );
+  const sortedQuotes = useMemo(
+    () => [...quotes].sort((a, b) => (sortOrder === "asc" ? a.premium - b.premium : b.premium - a.premium)),
+    [quotes, sortOrder],
+  );
+
+  // Autosave the anket (not contact details) so a visitor who navigates away can pick up where they left off.
+  useEffect(() => {
+    if (!type) return;
+    try {
+      localStorage.setItem(DRAFT_KEY, JSON.stringify({ type, params }));
+    } catch {
+      // Best-effort only.
+    }
+  }, [type, params]);
+
+  // Debounced draft save of the contact step, so a manager can follow up even if the visitor never submits.
+  useEffect(() => {
+    if (step !== "contact" || !type || !selectedQuote) return;
+    if (!contact.name.trim() && !contact.phone.trim()) return;
+
+    const timer = setTimeout(() => {
+      fetch("/api/leads/partial", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: draftIdRef.current,
+          type,
+          params,
+          quote: selectedQuote,
+          contact,
+        }),
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data?.id) draftIdRef.current = data.id;
+        })
+        .catch(() => {});
+    }, 800);
+
+    return () => clearTimeout(timer);
+  }, [step, type, params, selectedQuote, contact]);
 
   function chooseType(next: InsuranceType) {
     setType(next);
@@ -54,7 +130,9 @@ export default function QuoteWizard({ initialType }: { initialType?: string }) {
       if (!res.ok) throw new Error();
       const data = await res.json();
       setQuotes(data.quotes ?? []);
+      setSortOrder("asc");
       setStep("quotes");
+      trackEvent("quote_viewed", { type });
     } catch {
       setError("Не удалось получить предложения. Попробуйте ещё раз.");
     } finally {
@@ -70,6 +148,7 @@ export default function QuoteWizard({ initialType }: { initialType?: string }) {
 
   async function submitApplication() {
     if (!type || !selectedQuote) return;
+    if (website) return; // honeypot tripped — silently drop
     if (!consent) {
       setError("Нужно согласие на обработку персональных данных");
       return;
@@ -94,12 +173,20 @@ export default function QuoteWizard({ initialType }: { initialType?: string }) {
             email: contact.email.trim() || undefined,
           },
           consent: true,
+          draftId: draftIdRef.current,
+          website,
         }),
       });
       if (!res.ok) throw new Error();
       const data = await res.json();
       setApplicationId(data.id);
       setStep("success");
+      trackEvent("lead_submitted", { type, insurerId: selectedQuote.insurerId });
+      try {
+        localStorage.removeItem(DRAFT_KEY);
+      } catch {
+        // Best-effort only.
+      }
     } catch {
       setError("Не удалось отправить заявку. Попробуйте ещё раз.");
     } finally {
@@ -107,8 +194,21 @@ export default function QuoteWizard({ initialType }: { initialType?: string }) {
     }
   }
 
+  const currentStepIndex = STEP_ORDER.indexOf(step);
+
   return (
     <div className="mx-auto max-w-2xl px-5 py-12">
+      {step !== "success" && (
+        <div className="mb-8 flex items-center gap-2" aria-label={`Шаг ${currentStepIndex + 1} из ${STEP_ORDER.length}`}>
+          {STEP_ORDER.map((s, i) => (
+            <div
+              key={s}
+              className={`h-1.5 flex-1 rounded-full ${i <= currentStepIndex ? "bg-accent" : "bg-line"}`}
+            />
+          ))}
+        </div>
+      )}
+
       {step === "type" && (
         <div>
           <h1 className="font-serif text-2xl font-bold text-ink">Какой полис подобрать?</h1>
@@ -209,23 +309,42 @@ export default function QuoteWizard({ initialType }: { initialType?: string }) {
 
       {step === "quotes" && (
         <div>
-          <h1 className="font-serif text-2xl font-bold text-ink">Предложения</h1>
+          <div className="flex items-center justify-between gap-4">
+            <h1 className="font-serif text-2xl font-bold text-ink">Предложения</h1>
+            {quotes.length > 1 && (
+              <select
+                value={sortOrder}
+                onChange={(e) => setSortOrder(e.target.value as SortOrder)}
+                className="rounded-lg border border-line bg-surface px-2 py-1 text-sm text-ink"
+              >
+                <option value="asc">Сначала дешевле</option>
+                <option value="desc">Сначала дороже</option>
+              </select>
+            )}
+          </div>
           <p className="mt-1 text-sm text-ink-soft">
             Ориентировочная стоимость на основе введённых данных. Точная цена подтверждается
             страховщиком при оформлении.
           </p>
 
-          {quotes.length === 0 ? (
+          {sortedQuotes.length === 0 ? (
             <p className="mt-6 text-ink-soft">Не удалось получить предложения, попробуйте другие параметры.</p>
           ) : (
             <ul className="mt-6 space-y-3">
-              {quotes.map((q) => (
+              {sortedQuotes.map((q) => (
                 <li
                   key={q.insurerId}
                   className="flex items-center justify-between gap-4 rounded-xl border border-line bg-surface p-4"
                 >
                   <div>
-                    <p className="font-medium text-ink">{q.insurerName}</p>
+                    <p className="flex items-center gap-2 font-medium text-ink">
+                      {q.insurerName}
+                      {q.insurerId === cheapestId && (
+                        <span className="rounded-full bg-accent-soft px-2 py-0.5 text-xs font-medium text-accent-ink">
+                          Выгоднее всех
+                        </span>
+                      )}
+                    </p>
                     <p className="text-sm text-ink-soft">{q.coverageSummary}</p>
                   </div>
                   <div className="flex flex-col items-end gap-2">
@@ -296,6 +415,16 @@ export default function QuoteWizard({ initialType }: { initialType?: string }) {
                 className="mt-1 w-full rounded-lg border border-line bg-surface px-3 py-2 text-ink"
               />
             </div>
+            {/* Honeypot — hidden from real visitors, bots tend to fill every field. */}
+            <input
+              value={website}
+              onChange={(e) => setWebsite(e.target.value)}
+              name="website"
+              autoComplete="off"
+              tabIndex={-1}
+              aria-hidden="true"
+              className="absolute h-0 w-0 opacity-0"
+            />
             <label className="flex items-start gap-2 text-sm text-ink-soft">
               <input
                 type="checkbox"

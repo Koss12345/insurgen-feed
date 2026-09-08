@@ -36,6 +36,7 @@ export const INSURANCE_TYPES: InsuranceTypeConfig[] = [
       { name: "driverAge", label: "Возраст водителя", kind: "number", min: 18, max: 90, suffix: "лет", defaultValue: 30 },
       { name: "experienceYears", label: "Стаж вождения", kind: "number", min: 0, max: 70, suffix: "лет", defaultValue: 5 },
       { name: "power", label: "Мощность двигателя", kind: "number", min: 30, max: 600, suffix: "л.с.", defaultValue: 100 },
+      { name: "noAccidentYears", label: "Лет без аварий", kind: "number", min: 0, max: 15, suffix: "лет", defaultValue: 0 },
     ],
   },
   {
@@ -60,6 +61,8 @@ export const INSURANCE_TYPES: InsuranceTypeConfig[] = [
           { value: "50000", label: "50 000 ₽" },
         ],
       },
+      { name: "noAccidentYears", label: "Лет без аварий", kind: "number", min: 0, max: 15, suffix: "лет", defaultValue: 0 },
+      { name: "multiPolicy", label: "Уже есть другой полис у нас", kind: "checkbox", defaultValue: false },
     ],
   },
   {
@@ -82,6 +85,7 @@ export const INSURANCE_TYPES: InsuranceTypeConfig[] = [
         ],
       },
       { name: "chronicConditions", label: "Есть хронические заболевания", kind: "checkbox", defaultValue: false },
+      { name: "multiPolicy", label: "Уже есть другой полис у нас", kind: "checkbox", defaultValue: false },
     ],
   },
   {
@@ -106,6 +110,7 @@ export const INSURANCE_TYPES: InsuranceTypeConfig[] = [
       { name: "days", label: "Длительность поездки", kind: "number", min: 1, max: 365, suffix: "дней", defaultValue: 10 },
       { name: "travelersCount", label: "Количество путешественников", kind: "number", min: 1, max: 20, suffix: "чел.", defaultValue: 1 },
       { name: "age", label: "Возраст (старшего из путешественников)", kind: "number", min: 0, max: 100, suffix: "лет", defaultValue: 30 },
+      { name: "multiPolicy", label: "Уже есть другой полис у нас", kind: "checkbox", defaultValue: false },
     ],
   },
 ];

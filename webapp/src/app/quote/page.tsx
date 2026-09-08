@@ -1,7 +1,7 @@
 import QuoteWizard from "@/components/QuoteWizard";
 
 export const metadata = {
-  title: "Подбор полиса — Алина Страховка",
+  title: "Подбор полиса",
 };
 
 export default async function QuotePage({ searchParams }: PageProps<"/quote">) {

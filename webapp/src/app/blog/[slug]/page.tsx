@@ -10,7 +10,9 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: PageProps<"/blog/[slug]">) {
   const { slug } = await params;
   const article = getArticle(slug);
-  return { title: article ? `${article.title} — Алина Страховка` : "Статья не найдена" };
+  return article
+    ? { title: article.title, description: article.excerpt }
+    : { title: "Статья не найдена" };
 }
 
 export default async function ArticlePage({ params }: PageProps<"/blog/[slug]">) {
@@ -20,8 +22,17 @@ export default async function ArticlePage({ params }: PageProps<"/blog/[slug]">)
 
   const typeConfig = getInsuranceTypeConfig(article.relatedType);
 
+  const articleJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: article.title,
+    description: article.excerpt,
+    author: { "@type": "Organization", name: "Алина Страховка" },
+  };
+
   return (
     <div className="mx-auto max-w-2xl px-5 py-12">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }} />
       <Link href="/blog" className="text-sm text-ink-soft hover:text-accent-ink">
         ← Блог
       </Link>

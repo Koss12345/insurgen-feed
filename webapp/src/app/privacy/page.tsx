@@ -1,5 +1,5 @@
 export const metadata = {
-  title: "Политика обработки персональных данных — Алина Страховка",
+  title: "Политика обработки персональных данных",
 };
 
 export default function PrivacyPage() {

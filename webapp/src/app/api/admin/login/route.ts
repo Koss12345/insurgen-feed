@@ -1,13 +1,8 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
-import { ADMIN_COOKIE } from "@/lib/adminAuth";
+import { prisma } from "@/lib/db";
+import { setAdminSession, verifyPassword } from "@/lib/adminAuth";
 
 export async function POST(request: Request) {
-  const adminKey = process.env.ADMIN_KEY;
-  if (!adminKey) {
-    return NextResponse.json({ error: "Админ-доступ не настроен" }, { status: 500 });
-  }
-
   let body: unknown;
   try {
     body = await request.json();
@@ -15,19 +10,16 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Некорректный запрос" }, { status: 400 });
   }
 
-  const key = (body as { key?: unknown })?.key;
-  if (typeof key !== "string" || key !== adminKey) {
-    return NextResponse.json({ error: "Неверный ключ" }, { status: 401 });
+  const { email, password } = (body ?? {}) as { email?: unknown; password?: unknown };
+  if (typeof email !== "string" || typeof password !== "string") {
+    return NextResponse.json({ error: "Укажите email и пароль" }, { status: 400 });
   }
 
-  const cookieStore = await cookies();
-  cookieStore.set(ADMIN_COOKIE, adminKey, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/",
-    maxAge: 60 * 60 * 12,
-  });
+  const user = await prisma.adminUser.findUnique({ where: { email } });
+  if (!user || !verifyPassword(password, user.passwordHash)) {
+    return NextResponse.json({ error: "Неверный email или пароль" }, { status: 401 });
+  }
 
+  await setAdminSession(user.id);
   return NextResponse.json({ ok: true });
 }

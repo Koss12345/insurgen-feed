@@ -51,6 +51,17 @@ function ageFactor(age: number): number {
   return 1.25;
 }
 
+// Rough stand-in for a bonus-malus/no-claims discount: each accident-free
+// year shaves 5% off, capped at 50% — similar shape to the real ОСАГО КБМ
+// scale without reproducing its actual table.
+function noAccidentFactor(years: number): number {
+  return clamp(1 - years * 0.05, 0.5, 1);
+}
+
+function multiPolicyFactor(params: Record<string, QuoteParamValue>): number {
+  return bool(params, "multiPolicy") ? 0.95 : 1;
+}
+
 /**
  * Rough, transparent pricing formulas — not a real actuarial model. They
  * exist to produce a plausible base premium for the mock adapters to apply
@@ -64,9 +75,11 @@ export function computeBasePremium(type: InsuranceType, params: Record<string, Q
       const driverAge = clamp(num(params, "driverAge", 30), 18, 90);
       const experience = clamp(num(params, "experienceYears", 5), 0, 70);
       const power = clamp(num(params, "power", 100), 30, 600);
+      const noAccidentYears = clamp(num(params, "noAccidentYears", 0), 0, 15);
       const experienceFactor = experience < 3 ? 1.5 : 1;
       const powerFactor = 0.6 + power / 200;
-      const base = 5500 * region * ageFactor(driverAge) * experienceFactor * powerFactor;
+      const base =
+        5500 * region * ageFactor(driverAge) * experienceFactor * powerFactor * noAccidentFactor(noAccidentYears);
       return Math.round(base);
     }
     case "kasko": {
@@ -74,8 +87,16 @@ export function computeBasePremium(type: InsuranceType, params: Record<string, Q
       const vehicleAge = clamp(num(params, "vehicleAge", 3), 0, 25);
       const driverAge = clamp(num(params, "driverAge", 30), 18, 90);
       const franchise = FRANCHISE_DISCOUNT[str(params, "franchise", "0")] ?? 1;
+      const noAccidentYears = clamp(num(params, "noAccidentYears", 0), 0, 15);
       const ageWear = 1 - clamp(vehicleAge, 0, 12) * 0.02;
-      const base = price * 0.055 * ageFactor(driverAge) * ageWear * franchise;
+      const base =
+        price *
+        0.055 *
+        ageFactor(driverAge) *
+        ageWear *
+        franchise *
+        noAccidentFactor(noAccidentYears) *
+        multiPolicyFactor(params);
       return Math.round(base);
     }
     case "dms": {
@@ -83,7 +104,7 @@ export function computeBasePremium(type: InsuranceType, params: Record<string, Q
       const age = clamp(num(params, "age", 30), 0, 100);
       const chronic = bool(params, "chronicConditions") ? 1.35 : 1;
       const elderlyFactor = age > 55 ? 1.5 : age > 40 ? 1.2 : 1;
-      const base = programBase * elderlyFactor * chronic;
+      const base = programBase * elderlyFactor * chronic * multiPolicyFactor(params);
       return Math.round(base);
     }
     case "travel": {
@@ -91,7 +112,7 @@ export function computeBasePremium(type: InsuranceType, params: Record<string, Q
       const days = clamp(num(params, "days", 7), 1, 365);
       const travelers = clamp(num(params, "travelersCount", 1), 1, 20);
       const age = clamp(num(params, "age", 30), 0, 100);
-      const base = rate * days * travelers * ageFactor(age);
+      const base = rate * days * travelers * ageFactor(age) * multiPolicyFactor(params);
       return Math.round(base);
     }
     default:

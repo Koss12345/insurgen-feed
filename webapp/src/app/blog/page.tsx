@@ -2,7 +2,7 @@ import Link from "next/link";
 import { ARTICLES } from "@/lib/articles";
 
 export const metadata = {
-  title: "Блог — Алина Страховка",
+  title: "Блог",
 };
 
 export default function BlogPage() {

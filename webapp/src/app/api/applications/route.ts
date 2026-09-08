@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { isInsuranceType } from "@/lib/insurers/fields";
+import { getClientIp, isRateLimited } from "@/lib/rateLimit";
+import { notifyNewLead } from "@/lib/notify";
 
 interface ApplicationPayload {
   type: string;
@@ -17,6 +19,9 @@ interface ApplicationPayload {
     email?: string;
   };
   consent: boolean;
+  draftId?: string;
+  // Honeypot: a real visitor never sees or fills this field (hidden via CSS).
+  website?: string;
 }
 
 function isValidPayload(body: unknown): body is ApplicationPayload {
@@ -43,6 +48,10 @@ function isValidPayload(body: unknown): body is ApplicationPayload {
 }
 
 export async function POST(request: Request) {
+  if (isRateLimited(`applications:${getClientIp(request)}`, 5, 10 * 60 * 1000)) {
+    return NextResponse.json({ error: "Слишком много заявок. Попробуйте позже." }, { status: 429 });
+  }
+
   let body: unknown;
   try {
     body = await request.json();
@@ -52,6 +61,11 @@ export async function POST(request: Request) {
 
   if (!isValidPayload(body)) {
     return NextResponse.json({ error: "Заполните все обязательные поля и согласие" }, { status: 400 });
+  }
+
+  if (body.website) {
+    // Honeypot tripped — pretend success so the bot doesn't adjust and retry.
+    return NextResponse.json({ id: "ok" });
   }
 
   const application = await prisma.application.create({
@@ -68,6 +82,14 @@ export async function POST(request: Request) {
       consent: true,
     },
   });
+
+  if (body.draftId) {
+    await prisma.partialLead.deleteMany({ where: { id: body.draftId } });
+  }
+
+  await notifyNewLead(
+    `Новая заявка: ${body.quote.insurerName}, ${body.quote.premium.toLocaleString("ru-RU")} ₽\n${body.contact.name.trim()}, ${body.contact.phone.trim()}`,
+  );
 
   return NextResponse.json({ id: application.id });
 }
