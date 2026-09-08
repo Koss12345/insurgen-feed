@@ -1,0 +1,36 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// A lead/application submitted after the user picked a quote in the
+// calculator. `params` and the quote fields are a snapshot of what the
+// user saw at submission time, kept even if pricing logic changes later.
+model Application {
+  id String @id @default(cuid())
+
+  type   String // InsuranceType: "osago" | "kasko" | "dms" | "travel"
+  params String // JSON-stringified form params the quote was computed from
+
+  insurerId       String
+  insurerName     String
+  premium         Float
+  coverageSummary String
+
+  contactName  String
+  contactPhone String
+  contactEmail String?
+
+  consent Boolean @default(false)
+  status  String  @default("new") // "new" | "contacted" | "issued" | "cancelled"
+
+  createdAt DateTime @default(now())
+}
