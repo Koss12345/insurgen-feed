@@ -10,8 +10,10 @@ final class PlayScene: SKScene {
 
     private let cam = SKCameraNode()
     private var player = SKNode()
+    private var movers: [(obstacle: Obstacle, node: SKNode)] = []
     private var targetX: CGFloat = 195
     private var lastUpdate: TimeInterval = 0
+    private var playTime: TimeInterval = 0
     private let radius: CGFloat = 13
     private let playerOffset: CGFloat = 250
 
@@ -30,7 +32,14 @@ final class PlayScene: SKScene {
         if source == .custom, let saved = LevelStore.load() { level = saved } else { level = Level.random() }
 
         addChild(makeTunnelNode())
-        level.obstacles.forEach { addChild(makeObstacleNode($0)) }
+        for o in level.obstacles {
+            let node = makeObstacleNode(o)
+            addChild(node)
+            if o.kind == .mover {
+                addChild(makeRailNode(o))
+                movers.append((o, node))
+            }
+        }
 
         camera = cam
         cam.position = CGPoint(x: size.width / 2, y: size.height / 2)
@@ -60,25 +69,43 @@ final class PlayScene: SKScene {
 
     private func makePlayer() -> SKNode {
         let n = SKNode()
+
+        let shadow = SKShapeNode(ellipseOf: CGSize(width: 34, height: 22))
+        shadow.fillColor = SKColor(white: 0, alpha: 0.3)
+        shadow.strokeColor = .clear
+        shadow.position = CGPoint(x: 2, y: 4)
+        n.addChild(shadow)
+
         for dx in [CGFloat(-7), 7] {
-            let foot = SKShapeNode(rectOf: CGSize(width: 8, height: 10), cornerRadius: 3)
-            foot.fillColor = SKColor(white: 0.15, alpha: 1)
+            let foot = SKShapeNode(rectOf: CGSize(width: 8, height: 11), cornerRadius: 3)
+            foot.fillColor = SKColor(white: 0.12, alpha: 1)
             foot.strokeColor = .clear
             foot.position = CGPoint(x: dx, y: 0)
-            foot.name = "foot"
             n.addChild(foot)
             let dir: CGFloat = dx < 0 ? 1 : -1
             foot.run(.repeatForever(.sequence([.moveBy(x: 0, y: 7 * dir, duration: 0.15),
                                                .moveBy(x: 0, y: -14 * dir, duration: 0.3),
                                                .moveBy(x: 0, y: 7 * dir, duration: 0.15)])))
         }
+        for dx in [CGFloat(-17), 17] {
+            let arm = SKShapeNode(circleOfRadius: 5)
+            arm.fillColor = SKColor(red: 0.95, green: 0.78, blue: 0.62, alpha: 1)
+            arm.strokeColor = .clear
+            arm.position = CGPoint(x: dx, y: 8)
+            n.addChild(arm)
+            let dir: CGFloat = dx < 0 ? -1 : 1
+            arm.run(.repeatForever(.sequence([.moveBy(x: 0, y: 6 * dir, duration: 0.15),
+                                              .moveBy(x: 0, y: -12 * dir, duration: 0.3),
+                                              .moveBy(x: 0, y: 6 * dir, duration: 0.15)])))
+        }
         let body = SKShapeNode(rectOf: CGSize(width: 30, height: 14), cornerRadius: 7)
         body.fillColor = SKColor(red: 0.3, green: 0.55, blue: 1, alpha: 1)
-        body.strokeColor = .clear
+        body.strokeColor = SKColor(red: 0.15, green: 0.3, blue: 0.7, alpha: 1)
+        body.lineWidth = 2
         body.position = CGPoint(x: 0, y: 8)
         n.addChild(body)
         let head = SKShapeNode(circleOfRadius: 8)
-        head.fillColor = SKColor(red: 0.95, green: 0.78, blue: 0.62, alpha: 1)
+        head.fillColor = SKColor(red: 0.25, green: 0.15, blue: 0.1, alpha: 1)
         head.strokeColor = .clear
         head.position = CGPoint(x: 0, y: 9)
         n.addChild(head)
@@ -89,7 +116,11 @@ final class PlayScene: SKScene {
 
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         guard let t = touches.first else { return }
-        if state == .ready { state = .playing; messageLabel.text = "" }
+        if state == .ready {
+            state = .playing
+            messageLabel.text = ""
+            Sound.shared.play(.start)
+        }
         targetX = t.location(in: self).x
     }
 
@@ -116,19 +147,21 @@ final class PlayScene: SKScene {
     override func update(_ currentTime: TimeInterval) {
         defer { lastUpdate = currentTime }
         guard state == .playing, lastUpdate > 0 else { return }
-        let dt = CGFloat(min(currentTime - lastUpdate, 0.05))
+        let dt = min(currentTime - lastUpdate, 0.05)
+        playTime += dt
 
-        let speed = 240 + 40 * (cam.position.y / 1000)
-        cam.position.y += speed * dt
+        cam.position.y += CGFloat(dt) * (240 + 40 * (cam.position.y / 1000))
 
         let dx = targetX - player.position.x
-        let step = 450 * dt
+        let step = 450 * CGFloat(dt)
         player.position.x += max(-step, min(step, dx))
         player.position.x = max(Level.minX + radius, min(Level.maxX - radius, player.position.x))
         player.position.y = cam.position.y - playerOffset
 
+        for m in movers { m.node.position.x = m.obstacle.x + m.obstacle.xOffset(playTime) }
+
         updateProgress()
-        if level.obstacles.contains(where: { hits($0.rect) }) { finish(won: false) }
+        if level.obstacles.contains(where: { hits($0.rect(at: playTime)) }) { finish(won: false) }
         else if player.position.y >= Level.length { finish(won: true) }
     }
 
@@ -151,6 +184,7 @@ final class PlayScene: SKScene {
             let key = "bestProgress"
             if progress > UserDefaults.standard.integer(forKey: key) { UserDefaults.standard.set(progress, forKey: key) }
         }
+        Sound.shared.play(won ? .win : .hit)
         UINotificationFeedbackGenerator().notificationOccurred(won ? .success : .error)
         messageLabel.text = won ? "Победа!" : "Врезался! \(progress)%"
 
