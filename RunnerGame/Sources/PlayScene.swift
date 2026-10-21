@@ -151,12 +151,14 @@ final class PlayScene: SKScene {
         let dt = min(currentTime - lastUpdate, 0.05)
         playTime += dt
 
-        cam.position.y += CGFloat(dt) * (240 + 40 * (cam.position.y / 1000))
+        let world = World.current
+        cam.position.y += CGFloat(dt) * (world.baseSpeed + world.gain * (cam.position.y / 1000))
 
         let dx = targetX - player.position.x
         let inMud = level.obstacles.contains { $0.kind == .mud && hits($0.rect(at: 0)) }
         let step = (inMud ? 200 : 450) * CGFloat(dt)
-        player.position.x += max(-step, min(step, dx))
+        let move = world.icy ? dx * min(1, CGFloat(dt) * 4) : dx
+        player.position.x += max(-step, min(step, move))
         player.position.x = max(Level.minX + radius, min(Level.maxX - radius, player.position.x))
         player.position.y = cam.position.y - playerOffset
 
@@ -183,6 +185,11 @@ final class PlayScene: SKScene {
         state = .over
         player.children.forEach { $0.removeAllActions() }
         Records.submit(progress, slot: source == .custom ? LevelStore.currentSlot : nil)
+        if source == .random { GameCenter.submit(score: Records.totalScore()) }
+        var earned: [String] = []
+        if won { earned += ["first_win", source == .custom ? "own_win" : "world_\(Settings.worldIndex)"] }
+        if source == .random && progress >= 50 { earned.append("half") }
+        Achievements.announce(earned, on: cam, at: CGPoint(x: 0, y: 150))
         Sound.shared.play(won ? .win : .hit)
         Haptics.notify(won ? .success : .error)
         messageLabel.text = won ? "Победа!" : "Врезался! \(progress)%"

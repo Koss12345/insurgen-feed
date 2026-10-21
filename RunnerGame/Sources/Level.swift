@@ -73,7 +73,7 @@ struct Level: Codable {
     static let minX: CGFloat = 45
     static let maxX: CGFloat = 345
 
-    static func random() -> Level {
+    static func random(world: World = .current) -> Level {
         var obstacles: [Obstacle] = []
         var y: CGFloat = 500
         while y < length - 200 {
@@ -105,7 +105,7 @@ struct Level: Codable {
                 obstacles.append(Obstacle(x: minX + wl / 2, y: y, w: wl, h: h))
                 obstacles.append(Obstacle(x: maxX - wr / 2, y: y, w: wr, h: h))
             }
-            y += CGFloat.random(in: 150...230)
+            y += CGFloat.random(in: world.spacing)
         }
         return Level(obstacles: obstacles)
     }
@@ -168,13 +168,13 @@ private func lines(_ build: (CGMutablePath) -> Void) -> CGPath {
     return p
 }
 
-func makeTunnelNode() -> SKNode {
+func makeTunnelNode(world: World = .current) -> SKNode {
     let root = SKNode()
     let bottom: CGFloat = -1000
     let top = Level.length + 1500
     let midX = (Level.minX + Level.maxX) / 2
 
-    let floor = SKSpriteNode(color: SKColor(red: 0.17, green: 0.19, blue: 0.27, alpha: 1),
+    let floor = SKSpriteNode(color: world.floor,
                              size: CGSize(width: Level.maxX - Level.minX, height: top - bottom))
     floor.anchorPoint = CGPoint(x: 0.5, y: 0)
     floor.position = CGPoint(x: midX, y: bottom)
@@ -196,7 +196,7 @@ func makeTunnelNode() -> SKNode {
 
     // Кирпичные стены
     for (x0, x1) in [(CGFloat(0), Level.minX), (Level.maxX, CGFloat(390))] {
-        let bg = SKSpriteNode(color: SKColor(red: 0.10, green: 0.09, blue: 0.13, alpha: 1),
+        let bg = SKSpriteNode(color: world.wall,
                               size: CGSize(width: x1 - x0, height: top - bottom))
         bg.anchorPoint = .zero
         bg.position = CGPoint(x: x0, y: bottom)
@@ -226,7 +226,7 @@ func makeTunnelNode() -> SKNode {
             p.move(to: CGPoint(x: x, y: bottom)); p.addLine(to: CGPoint(x: x, y: top))
         }
     })
-    edges.strokeColor = SKColor(red: 0.3, green: 0.8, blue: 1, alpha: 0.8)
+    edges.strokeColor = world.edge
     edges.lineWidth = 3
     edges.glowWidth = 3
     edges.zPosition = 1.2
@@ -371,6 +371,17 @@ func makeButton(_ title: String, name: String, size: CGSize = CGSize(width: 150,
     l.verticalAlignmentMode = .center
     b.addChild(l)
     return b
+}
+
+func showBanner(_ text: String, on parent: SKNode, at p: CGPoint) {
+    let l = SKLabelNode(fontNamed: "AvenirNext-Bold")
+    l.text = text
+    l.fontSize = 18
+    l.fontColor = .yellow
+    l.position = p
+    l.zPosition = 30
+    parent.addChild(l)
+    l.run(.sequence([.wait(forDuration: 2.5), .fadeOut(withDuration: 0.5), .removeFromParent()]))
 }
 
 func setButtonTitle(_ b: SKShapeNode, _ title: String) {

@@ -2,6 +2,8 @@ import SpriteKit
 
 final class MenuScene: SKScene {
     private var slotButton: SKShapeNode!
+    private var worldButton: SKShapeNode!
+    private var subLabel = SKLabelNode()
 
     override func didMove(to view: SKView) {
         backgroundColor = SKColor(red: 0.07, green: 0.07, blue: 0.10, alpha: 1)
@@ -9,28 +11,34 @@ final class MenuScene: SKScene {
         let title = SKLabelNode(fontNamed: "AvenirNext-Heavy")
         title.text = "ТОННЕЛЬ"
         title.fontSize = 48
-        title.position = CGPoint(x: size.width / 2, y: size.height - 220)
+        title.position = CGPoint(x: size.width / 2, y: size.height - 150)
         addChild(title)
 
-        let best = Records.best(slot: nil)
-        let sub = SKLabelNode(fontNamed: "AvenirNext-Medium")
-        sub.text = "Лучший результат: \(best)%"
-        sub.fontSize = 18
-        sub.position = CGPoint(x: size.width / 2, y: size.height - 260)
-        addChild(sub)
+        subLabel = SKLabelNode(fontNamed: "AvenirNext-Medium")
+        subLabel.fontSize = 18
+        subLabel.position = CGPoint(x: size.width / 2, y: size.height - 190)
+        addChild(subLabel)
 
-        let items = [("Случайный тоннель", "random"), ("Играть свой уровень", "custom"),
-                     ("", "slot"), ("Редактор", "editor"), ("Настройки", "settings")]
+        let items = [("Случайный тоннель", "random"), ("", "world"), ("Играть свой уровень", "custom"),
+                     ("", "slot"), ("Редактор", "editor"), ("Достижения", "achievements"), ("Настройки", "settings")]
         for (i, item) in items.enumerated() {
-            let b = makeButton(item.0, name: item.1, size: CGSize(width: 260, height: 56))
-            b.position = CGPoint(x: size.width / 2, y: size.height / 2 - CGFloat(i) * 76)
+            let b = makeButton(item.0, name: item.1, size: CGSize(width: 280, height: 52))
+            b.position = CGPoint(x: size.width / 2, y: size.height / 2 + 190 - CGFloat(i) * 64)
             addChild(b)
-            if item.1 == "slot" { slotButton = b; b.fillColor = SKColor(red: 0.3, green: 0.3, blue: 0.4, alpha: 1) }
+            switch item.1 {
+            case "world", "slot": b.fillColor = SKColor(red: 0.3, green: 0.3, blue: 0.4, alpha: 1)
+            default: break
+            }
+            if item.1 == "world" { worldButton = b }
+            if item.1 == "slot" { slotButton = b }
         }
-        updateSlotTitle()
+        refresh()
     }
 
-    private func updateSlotTitle() {
+    private func refresh() {
+        let world = World.current
+        subLabel.text = "Рекорд в мире «\(world.name)»: \(Records.best(slot: nil))%"
+        setButtonTitle(worldButton, "Мир: \(world.name)")
         let slot = LevelStore.currentSlot
         let count = LevelStore.load(slot: slot)?.obstacles.count ?? 0
         setButtonTitle(slotButton, "Слот \(slot + 1)/\(LevelStore.slotCount) · \(count) об. · \(Records.best(slot: slot))%")
@@ -42,10 +50,15 @@ final class MenuScene: SKScene {
         switch name {
         case "random": next = PlayScene(size: size, source: .random)
         case "custom": next = PlayScene(size: size, source: .custom)
+        case "world":
+            Settings.worldIndex = (Settings.worldIndex + 1) % World.all.count
+            refresh()
+            return
         case "slot":
             LevelStore.currentSlot = (LevelStore.currentSlot + 1) % LevelStore.slotCount
-            updateSlotTitle()
+            refresh()
             return
+        case "achievements": next = AchievementsScene(size: size)
         case "settings": next = SettingsScene(size: size)
         default: next = EditorScene(size: size)
         }

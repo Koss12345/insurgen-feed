@@ -13,6 +13,8 @@ class GameViewController: UIViewController {
         scene.scaleMode = .aspectFill
         skView.presentScene(scene)
         skView.ignoresSiblingOrder = true
+        GameCenter.authenticate(from: self)
+        Sound.shared.refreshMusic()
     }
 
     override var prefersStatusBarHidden: Bool { true }

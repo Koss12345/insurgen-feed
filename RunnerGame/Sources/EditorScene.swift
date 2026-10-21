@@ -151,6 +151,7 @@ final class EditorScene: SKScene {
             LevelStore.save(level)
         case "share":
             guard !level.obstacles.isEmpty else { toast("Уровень пустой"); return }
+            Achievements.announce(["sharer"], on: cam, at: CGPoint(x: 0, y: 100))
             let vc = UIActivityViewController(activityItems: [level.shareCode()], applicationActivities: nil)
             view?.window?.rootViewController?.present(vc, animated: true)
         case "import":
@@ -183,6 +184,9 @@ final class EditorScene: SKScene {
             let y = max(300, min(Level.length - 100, snap(p.y)))
             level.obstacles.append(Obstacle(x: x, y: y, w: b.w, h: b.h, kind: b.kind))
             Sound.shared.play(.place)
+            let placed = UserDefaults.standard.integer(forKey: "placed") + 1
+            UserDefaults.standard.set(placed, forKey: "placed")
+            if placed >= 20 { Achievements.announce(["builder"], on: cam, at: CGPoint(x: 0, y: 100)) }
         }
         redraw()
         updateLabels()

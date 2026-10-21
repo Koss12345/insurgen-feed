@@ -6,6 +6,7 @@ enum Sfx: CaseIterable { case start, hit, win, place, remove }
 final class Sound {
     static let shared = Sound()
     private var players: [Sfx: AVAudioPlayer] = [:]
+    private var music: AVAudioPlayer?
 
     private init() {
         try? AVAudioSession.sharedInstance().setCategory(.ambient)
@@ -24,10 +25,48 @@ final class Sound {
         }
     }
 
+    /// Включает или выключает фоновую музыку по настройке
+    func refreshMusic() {
+        if Settings.musicOn {
+            if music == nil, let p = try? AVAudioPlayer(data: Sound.musicWav()) {
+                p.numberOfLoops = -1
+                p.volume = 0.25
+                music = p
+            }
+            if music?.isPlaying == false { music?.play() }
+        } else {
+            music?.stop()
+        }
+    }
+
     func play(_ sfx: Sfx) {
         guard Settings.soundOn, let p = players[sfx] else { return }
         p.currentTime = 0
         p.play()
+    }
+
+    /// Зацикленная мелодия: арпеджио Am - F - C - G и бас
+    private static func musicWav() -> Data {
+        let rate = 22050
+        let noteLen = 0.2
+        let chords: [(root: Double, third: Double)] = [(110, 1.189), (87.31, 1.26), (130.81, 1.26), (98, 1.26)]
+        let pattern = [0, 1, 2, 3, 2, 1, 2, 1]
+        var samples: [Int16] = []
+        for chord in chords {
+            let ratios = [1, chord.third, 1.5, 2]
+            for step in pattern {
+                let freq = chord.root * 2 * ratios[step]
+                let n = Int(Double(rate) * noteLen)
+                for i in 0..<n {
+                    let t = Double(i) / Double(rate)
+                    let env = min(1, t * 80) * exp(-t * 7)
+                    let lead = sin(2 * .pi * freq * t) * env * 0.5
+                    let bass = sin(2 * .pi * chord.root * t) * 0.35
+                    samples.append(Int16((lead + bass) * 0.5 * 32767))
+                }
+            }
+        }
+        return pcmWav(samples, rate: rate)
     }
 
     private static func wav(_ notes: [(Double, Double)]) -> Data {
@@ -41,6 +80,10 @@ final class Sound {
                 samples.append(Int16(sin(2 * .pi * freq * t) * envelope * 0.4 * 32767))
             }
         }
+        return pcmWav(samples, rate: rate)
+    }
+
+    private static func pcmWav(_ samples: [Int16], rate: Int) -> Data {
         let dataLen = samples.count * 2
         var d = Data()
         func u32(_ v: UInt32) { withUnsafeBytes(of: v.littleEndian) { d.append(contentsOf: $0) } }
