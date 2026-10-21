@@ -9,7 +9,7 @@ class GameViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         guard let skView = view as? SKView else { return }
-        let scene = GameScene(size: CGSize(width: 390, height: 844))
+        let scene = MenuScene(size: CGSize(width: 390, height: 844))
         scene.scaleMode = .aspectFill
         skView.presentScene(scene)
         skView.ignoresSiblingOrder = true
