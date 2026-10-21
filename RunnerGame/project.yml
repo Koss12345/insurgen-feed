@@ -1,0 +1,22 @@
+name: Runner
+options:
+  bundleIdPrefix: com.example
+  deploymentTarget:
+    iOS: "16.0"
+targets:
+  Runner:
+    type: application
+    platform: iOS
+    sources: [Sources]
+    info:
+      path: Sources/Info.plist
+      properties:
+        CFBundleDisplayName: Runner
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
+        UIRequiresFullScreen: true
+        UIStatusBarHidden: true
+    settings:
+      PRODUCT_BUNDLE_IDENTIFIER: com.example.runner
+      SWIFT_VERSION: "5.0"
+      TARGETED_DEVICE_FAMILY: "1"
