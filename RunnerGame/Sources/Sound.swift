@@ -25,7 +25,7 @@ final class Sound {
     }
 
     func play(_ sfx: Sfx) {
-        guard let p = players[sfx] else { return }
+        guard Settings.soundOn, let p = players[sfx] else { return }
         p.currentTime = 0
         p.play()
     }

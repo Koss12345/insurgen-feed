@@ -14,7 +14,9 @@ final class EditorScene: SKScene {
         Brush(name: "Стенка", kind: .block, w: 120, h: 28),
         Brush(name: "Большой", kind: .block, w: 80, h: 80),
         Brush(name: "Шипы", kind: .spike, w: 80, h: 30),
-        Brush(name: "Пила", kind: .mover, w: 44, h: 44)
+        Brush(name: "Пила", kind: .mover, w: 44, h: 44),
+        Brush(name: "Лазер", kind: .laser, w: 100, h: 14),
+        Brush(name: "Лужа", kind: .mud, w: 100, h: 60)
     ]
     private var brush = 0
     private var level = LevelStore.load() ?? Level(obstacles: [])
@@ -87,10 +89,10 @@ final class EditorScene: SKScene {
         for o in level.obstacles {
             let node = makeObstacleNode(o)
             obstacleLayer.addChild(node)
-            if o.kind == .mover {
-                obstacleLayer.addChild(makeRailNode(o))
+            if o.kind == .mover { obstacleLayer.addChild(makeRailNode(o)) }
+            if o.isAnimated {
                 node.run(.repeatForever(.customAction(withDuration: 1000) { n, t in
-                    n.position.x = o.x + o.xOffset(TimeInterval(t))
+                    applyAnimation(o, to: n, at: TimeInterval(t))
                 }))
             }
         }
@@ -143,6 +145,7 @@ final class EditorScene: SKScene {
             level = LevelStore.load() ?? Level(obstacles: [])
             redraw()
         case "clear":
+            Records.reset(slot: LevelStore.currentSlot)
             level.obstacles.removeAll()
             redraw()
             LevelStore.save(level)
@@ -152,6 +155,7 @@ final class EditorScene: SKScene {
             view?.window?.rootViewController?.present(vc, animated: true)
         case "import":
             if let text = UIPasteboard.general.string, let imported = Level.fromShareCode(text) {
+                Records.reset(slot: LevelStore.currentSlot)
                 level = imported
                 redraw()
                 LevelStore.save(level)
@@ -168,6 +172,7 @@ final class EditorScene: SKScene {
     }
 
     private func placeOrRemove(at p: CGPoint) {
+        Records.reset(slot: LevelStore.currentSlot)
         if let i = level.obstacles.lastIndex(where: { $0.sweepRect.insetBy(dx: -8, dy: -8).contains(p) }) {
             level.obstacles.remove(at: i)
             Sound.shared.play(.remove)

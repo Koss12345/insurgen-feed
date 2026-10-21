@@ -35,9 +35,10 @@ final class PlayScene: SKScene {
         for o in level.obstacles {
             let node = makeObstacleNode(o)
             addChild(node)
-            if o.kind == .mover {
-                addChild(makeRailNode(o))
+            if o.kind == .mover { addChild(makeRailNode(o)) }
+            if o.isAnimated {
                 movers.append((o, node))
+                applyAnimation(o, to: node, at: 0)
             }
         }
 
@@ -153,15 +154,16 @@ final class PlayScene: SKScene {
         cam.position.y += CGFloat(dt) * (240 + 40 * (cam.position.y / 1000))
 
         let dx = targetX - player.position.x
-        let step = 450 * CGFloat(dt)
+        let inMud = level.obstacles.contains { $0.kind == .mud && hits($0.rect(at: 0)) }
+        let step = (inMud ? 200 : 450) * CGFloat(dt)
         player.position.x += max(-step, min(step, dx))
         player.position.x = max(Level.minX + radius, min(Level.maxX - radius, player.position.x))
         player.position.y = cam.position.y - playerOffset
 
-        for m in movers { m.node.position.x = m.obstacle.x + m.obstacle.xOffset(playTime) }
+        for m in movers { applyAnimation(m.obstacle, to: m.node, at: playTime) }
 
         updateProgress()
-        if level.obstacles.contains(where: { hits($0.rect(at: playTime)) }) { finish(won: false) }
+        if level.obstacles.contains(where: { $0.isDeadly(at: playTime) && hits($0.rect(at: playTime)) }) { finish(won: false) }
         else if player.position.y >= Level.length { finish(won: true) }
     }
 
@@ -180,12 +182,9 @@ final class PlayScene: SKScene {
     private func finish(won: Bool) {
         state = .over
         player.children.forEach { $0.removeAllActions() }
-        if source == .random {
-            let key = "bestProgress"
-            if progress > UserDefaults.standard.integer(forKey: key) { UserDefaults.standard.set(progress, forKey: key) }
-        }
+        Records.submit(progress, slot: source == .custom ? LevelStore.currentSlot : nil)
         Sound.shared.play(won ? .win : .hit)
-        UINotificationFeedbackGenerator().notificationOccurred(won ? .success : .error)
+        Haptics.notify(won ? .success : .error)
         messageLabel.text = won ? "Победа!" : "Врезался! \(progress)%"
 
         var items = [("Заново", "retry"), ("Меню", "menu")]

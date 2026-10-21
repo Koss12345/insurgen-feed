@@ -1,7 +1,7 @@
 import SpriteKit
 
 struct Obstacle: Codable {
-    enum Kind: String, Codable { case block, spike, mover }
+    enum Kind: String, Codable { case block, spike, mover, laser, mud }
 
     static let moverRange: CGFloat = 50
 
@@ -29,6 +29,22 @@ struct Obstacle: Codable {
         kind == .mover ? Obstacle.moverRange * sin(CGFloat(t) * 1.8 + y * 0.01) : 0
     }
 
+    /// Лазер горит секунду, секунду отдыхает
+    func laserOn(_ t: TimeInterval) -> Bool {
+        fmod(t + Double(y) * 0.013, 2.0) < 1.0
+    }
+
+    /// Лужа не убивает, а замедляет; лазер убивает только когда горит
+    func isDeadly(at t: TimeInterval) -> Bool {
+        switch kind {
+        case .mud: return false
+        case .laser: return laserOn(t)
+        default: return true
+        }
+    }
+
+    var isAnimated: Bool { kind == .mover || kind == .laser }
+
     /// Опасная зона в момент t (у шипов и пилы чуть меньше картинки)
     func rect(at t: TimeInterval) -> CGRect {
         let inset: CGFloat
@@ -36,6 +52,8 @@ struct Obstacle: Codable {
         case .block: inset = 0
         case .spike: inset = 0.2
         case .mover: inset = 0.12
+        case .laser: inset = 0.1
+        case .mud: inset = 0
         }
         return CGRect(x: x + xOffset(t) - w / 2, y: y - h / 2, width: w, height: h)
             .insetBy(dx: w * inset, dy: h * inset)
@@ -60,7 +78,15 @@ struct Level: Codable {
         var y: CGFloat = 500
         while y < length - 200 {
             let roll = Int.random(in: 0..<100)
-            if roll < 20 {
+            if roll < 10 {
+                let w = CGFloat.random(in: 80...200)
+                let x = CGFloat.random(in: (minX + w / 2)...(maxX - w / 2))
+                obstacles.append(Obstacle(x: x, y: y, w: w, h: 14, kind: .laser))
+            } else if roll < 18 {
+                let w = CGFloat.random(in: 120...300)
+                let x = CGFloat.random(in: (minX + w / 2)...(maxX - w / 2))
+                obstacles.append(Obstacle(x: x, y: y, w: w, h: CGFloat.random(in: 60...100), kind: .mud))
+            } else if roll < 32 {
                 // Пила, ездит в центре — по бокам всегда есть проход
                 obstacles.append(Obstacle(x: CGFloat.random(in: 170...220), y: y, w: 44, h: 44, kind: .mover))
             } else if roll < 45 {
@@ -282,11 +308,43 @@ func makeObstacleNode(_ o: Obstacle) -> SKNode {
         blade.addChild(hub)
         blade.run(.repeatForever(.rotate(byAngle: .pi * 2, duration: 0.6)))
         node = blade
+    case .laser:
+        let c = SKNode()
+        let beam = SKShapeNode(rectOf: CGSize(width: o.w, height: 6), cornerRadius: 3)
+        beam.name = "beam"
+        beam.fillColor = SKColor(red: 1, green: 0.2, blue: 0.2, alpha: 1)
+        beam.strokeColor = .clear
+        beam.glowWidth = 4
+        c.addChild(beam)
+        for dx in [-o.w / 2, o.w / 2] {
+            let post = SKShapeNode(circleOfRadius: 8)
+            post.fillColor = SKColor(white: 0.45, alpha: 1)
+            post.strokeColor = SKColor(white: 0.15, alpha: 1)
+            post.lineWidth = 2
+            post.position = CGPoint(x: dx, y: 0)
+            c.addChild(post)
+        }
+        node = c
+    case .mud:
+        let m = SKShapeNode(rectOf: CGSize(width: o.w, height: o.h), cornerRadius: min(o.w, o.h) / 2.5)
+        m.fillColor = SKColor(red: 0.35, green: 0.25, blue: 0.12, alpha: 0.9)
+        m.strokeColor = SKColor(red: 0.22, green: 0.15, blue: 0.07, alpha: 1)
+        m.lineWidth = 3
+        node = m
     }
     node.name = "obs"
     node.position = CGPoint(x: o.x, y: o.y)
-    node.zPosition = 2
+    node.zPosition = o.kind == .mud ? 1.6 : 2
     return node
+}
+
+/// Обновляет положение пилы и свечение лазера
+func applyAnimation(_ o: Obstacle, to node: SKNode, at t: TimeInterval) {
+    switch o.kind {
+    case .mover: node.position.x = o.x + o.xOffset(t)
+    case .laser: node.childNode(withName: "beam")?.alpha = o.laserOn(t) ? 1 : 0.12
+    default: break
+    }
 }
 
 /// Рельса, по которой ездит пила

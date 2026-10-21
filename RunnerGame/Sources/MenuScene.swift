@@ -12,7 +12,7 @@ final class MenuScene: SKScene {
         title.position = CGPoint(x: size.width / 2, y: size.height - 220)
         addChild(title)
 
-        let best = UserDefaults.standard.integer(forKey: "bestProgress")
+        let best = Records.best(slot: nil)
         let sub = SKLabelNode(fontNamed: "AvenirNext-Medium")
         sub.text = "Лучший результат: \(best)%"
         sub.fontSize = 18
@@ -20,7 +20,7 @@ final class MenuScene: SKScene {
         addChild(sub)
 
         let items = [("Случайный тоннель", "random"), ("Играть свой уровень", "custom"),
-                     ("", "slot"), ("Редактор", "editor")]
+                     ("", "slot"), ("Редактор", "editor"), ("Настройки", "settings")]
         for (i, item) in items.enumerated() {
             let b = makeButton(item.0, name: item.1, size: CGSize(width: 260, height: 56))
             b.position = CGPoint(x: size.width / 2, y: size.height / 2 - CGFloat(i) * 76)
@@ -33,7 +33,7 @@ final class MenuScene: SKScene {
     private func updateSlotTitle() {
         let slot = LevelStore.currentSlot
         let count = LevelStore.load(slot: slot)?.obstacles.count ?? 0
-        setButtonTitle(slotButton, "Слот \(slot + 1) из \(LevelStore.slotCount) · блоков: \(count)")
+        setButtonTitle(slotButton, "Слот \(slot + 1)/\(LevelStore.slotCount) · \(count) об. · \(Records.best(slot: slot))%")
     }
 
     override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
@@ -46,6 +46,7 @@ final class MenuScene: SKScene {
             LevelStore.currentSlot = (LevelStore.currentSlot + 1) % LevelStore.slotCount
             updateSlotTitle()
             return
+        case "settings": next = SettingsScene(size: size)
         default: next = EditorScene(size: size)
         }
         next.scaleMode = scaleMode
