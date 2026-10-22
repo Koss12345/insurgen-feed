@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#12121a">
+<title>Тоннель</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%2312121a%27/%3E%3Crect x=%279%27 y=%273%27 width=%2714%27 height=%2726%27 fill=%27%232b3045%27 stroke=%27%234dccff%27 stroke-width=%272%27/%3E%3Ccircle cx=%2716%27 cy=%2722%27 r=%275%27 fill=%27%234d8cff%27/%3E%3C/svg%3E">
+<link rel="stylesheet" href="style.css">
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+<div id="stage">
+  <canvas id="cv"></canvas>
+
+  <div id="hud" class="hidden"><span id="pct">0%</span></div>
+  <div id="msg" class="hidden"></div>
+
+  <section id="menu" class="screen">
+    <h1>ТОННЕЛЬ</h1>
+    <p class="sub">Веди человечка пальцем и обходи ловушки</p>
+    <div class="picker"><button id="worldPrev" class="arrow">‹</button><div><b id="worldName"></b><small id="worldBest"></small></div><button id="worldNext" class="arrow">›</button></div>
+    <button id="btnPlay" class="btn green">Играть</button>
+    <div class="picker"><button id="slotPrev" class="arrow">‹</button><div><b id="slotName"></b><small id="slotBest"></small></div><button id="slotNext" class="arrow">›</button></div>
+    <button id="btnCustom" class="btn">Мой уровень</button>
+    <button id="btnEditor" class="btn">Редактор</button>
+    <div class="row">
+      <button id="btnAch" class="btn small">Достижения</button>
+      <button id="btnSettings" class="btn small">Настройки</button>
+    </div>
+  </section>
+
+  <section id="settings" class="screen hidden">
+    <h2>Настройки</h2>
+    <button id="setSound" class="btn"></button>
+    <button id="setMusic" class="btn"></button>
+    <button id="setHaptics" class="btn"></button>
+    <button id="setReset" class="btn red">Сбросить рекорды</button>
+    <button class="btn back">Назад</button>
+  </section>
+
+  <section id="ach" class="screen hidden">
+    <h2>Достижения</h2>
+    <div id="achList"></div>
+    <div id="records"></div>
+    <button class="btn back">Назад</button>
+  </section>
+
+  <section id="over" class="screen overlay hidden">
+    <h2 id="overTitle"></h2>
+    <p id="overSub" class="sub"></p>
+    <button id="ovRetry" class="btn green">Заново</button>
+    <button id="ovEdit" class="btn">Править</button>
+    <button id="ovShare" class="btn">Поделиться результатом</button>
+    <button class="btn back">Меню</button>
+  </section>
+
+  <div id="editorTop" class="hidden"><div id="edInfo"></div><div class="hint">Тап — поставить или убрать, тяни — листать</div></div>
+  <div id="editorBar" class="hidden">
+    <div class="row"><button id="edBrush" class="btn small"></button><button id="edSlot" class="btn small"></button></div>
+    <div class="row"><button id="edClear" class="btn small">Очистить</button><button id="edImport" class="btn small">Импорт</button></div>
+    <div class="row"><button id="edShare" class="btn small">Поделиться</button><button class="btn small back">Меню</button></div>
+    <button id="edPlay" class="btn green small wide">Играть</button>
+  </div>
+
+  <div id="modal" class="hidden">
+    <div class="card">
+      <h3>Импорт уровня</h3>
+      <p class="sub">Вставь код, который прислал друг (начинается с TUNNEL1:)</p>
+      <textarea id="importText" rows="4" spellcheck="false"></textarea>
+      <div class="row"><button id="impPaste" class="btn small">Вставить</button><button id="impOk" class="btn green small">Импортировать</button></div>
+      <button id="impCancel" class="btn small wide">Отмена</button>
+    </div>
+  </div>
+
+  <div id="toasts"></div>
+</div>
+<script type="module" src="app.js"></script>
+</body>
+</html>
