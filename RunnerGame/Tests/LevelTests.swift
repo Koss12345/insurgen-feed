@@ -57,17 +57,17 @@ final class LevelTests: XCTestCase {
     func testImportedLevelIsSanitized() throws {
         let wild = Level(obstacles: [
             Obstacle(x: -5000, y: 99999, w: 9999, h: 1, kind: .block),
-            Obstacle(x: .nan, y: 10, w: 40, h: 40)
+            Obstacle(x: 5000, y: -50, w: 40, h: 40, kind: .mover)
         ])
         let data = try JSONEncoder().encode(wild)
-        let decoded = Level.fromShareCode("TUNNEL1:" + data.base64EncodedString())
-        // NaN нельзя закодировать в JSON — тогда импорт просто отклоняется, это тоже корректно
-        if let decoded {
-            for o in decoded.obstacles {
-                XCTAssertTrue(o.rect(at: 0).minX >= Level.minX - 0.5 && o.rect(at: 0).maxX <= Level.maxX + 0.5)
-                XCTAssertLessThanOrEqual(o.y, Level.length)
-                XCTAssertLessThanOrEqual(o.w, 200)
-            }
+        let decoded = try XCTUnwrap(Level.fromShareCode("TUNNEL1:" + data.base64EncodedString()))
+        XCTAssertEqual(decoded.obstacles.count, 2)
+        for o in decoded.obstacles {
+            XCTAssertGreaterThanOrEqual(o.sweepRect.minX, Level.minX - 0.5)
+            XCTAssertLessThanOrEqual(o.sweepRect.maxX, Level.maxX + 0.5)
+            XCTAssertLessThanOrEqual(o.y, Level.length)
+            XCTAssertGreaterThanOrEqual(o.y, 0)
+            XCTAssertLessThanOrEqual(o.w, 200)
         }
     }
 
