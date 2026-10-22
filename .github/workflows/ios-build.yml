@@ -1,0 +1,30 @@
+name: iOS build
+
+on:
+  push:
+    paths: ['RunnerGame/**', '.github/workflows/ios-build.yml']
+  pull_request:
+    paths: ['RunnerGame/**']
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install XcodeGen
+        run: brew install xcodegen
+      - name: Generate Xcode project
+        working-directory: RunnerGame
+        run: xcodegen generate
+      - name: Build for iOS Simulator
+        working-directory: RunnerGame
+        run: |
+          set -o pipefail
+          xcodebuild build \
+            -project Runner.xcodeproj \
+            -scheme Runner \
+            -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' \
+            CODE_SIGNING_ALLOWED=NO | tee build.log | grep -E "error:|warning: unre|BUILD" || true
+          grep -q "BUILD SUCCEEDED" build.log
