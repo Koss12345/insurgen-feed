@@ -30,3 +30,56 @@ jobs:
             CODE_SIGNING_ALLOWED=NO > build.log 2>&1 || true
           grep -E "error:|Test Case.*(passed|failed)|Executed|TEST (SUCCEEDED|FAILED)|BUILD" build.log | head -80
           grep -q "TEST SUCCEEDED" build.log
+
+  screenshots:
+    runs-on: macos-15
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install XcodeGen and generate project
+        working-directory: RunnerGame
+        run: |
+          brew install xcodegen
+          xcodegen generate
+      - name: Build, launch in simulator and take screenshots
+        working-directory: RunnerGame
+        run: |
+          set -eo pipefail
+          UDID=$(xcrun simctl list devices available | grep -m1 "iPhone" | grep -oE '[0-9A-F]{8}-([0-9A-F]{4}-){3}[0-9A-F]{12}')
+          xcrun simctl boot "$UDID"
+          xcrun simctl bootstatus "$UDID" -b
+          xcodebuild build -project Runner.xcodeproj -scheme Runner -destination "id=$UDID" \
+            -derivedDataPath build CODE_SIGNING_ALLOWED=NO | tail -3
+          xcrun simctl install "$UDID" build/Build/Products/Debug-iphonesimulator/Runner.app
+          mkdir -p shots
+          shot() {
+            name=$1; shift
+            xcrun simctl terminate "$UDID" com.example.runner 2>/dev/null || true
+            xcrun simctl launch "$UDID" com.example.runner "$@"
+            sleep 5
+            xcrun simctl io "$UDID" screenshot "shots/$name.png"
+          }
+          shot 1_menu
+          shot 2_play_podval -screen play -world 0 -autostart -godmode
+          shot 3_play_led -screen play -world 1 -autostart -godmode
+          shot 4_play_lava -screen play -world 2 -autostart -godmode
+          shot 5_editor -screen editor -world 0
+          shot 6_achievements -screen achievements
+          shot 7_settings -screen settings
+          ls -la shots
+      - uses: actions/upload-artifact@v4
+        with:
+          name: screenshots
+          path: RunnerGame/shots
+      - name: Publish screenshots to ci-screenshots branch
+        run: |
+          cp -r RunnerGame/shots "$RUNNER_TEMP/shots"
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git checkout --orphan ci-screenshots
+          git rm -rf . > /dev/null
+          mkdir screenshots && cp "$RUNNER_TEMP"/shots/*.png screenshots/
+          git add screenshots
+          git commit -m "Screenshots from ${GITHUB_SHA::7}"
+          git push -f origin ci-screenshots

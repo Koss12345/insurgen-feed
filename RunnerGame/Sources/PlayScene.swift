@@ -17,6 +17,12 @@ final class PlayScene: SKScene {
     private let radius: CGFloat = 13
     private let playerOffset: CGFloat = 250
 
+    #if DEBUG
+    private let godMode = ProcessInfo.processInfo.arguments.contains("-godmode")
+    #else
+    private let godMode = false
+    #endif
+
     private var progressLabel = SKLabelNode()
     private var messageLabel = SKLabelNode()
 
@@ -66,6 +72,12 @@ final class PlayScene: SKScene {
         messageLabel.zPosition = 10
         cam.addChild(messageLabel)
         updateProgress()
+        #if DEBUG
+        if ProcessInfo.processInfo.arguments.contains("-autostart") {
+            state = .playing
+            messageLabel.text = ""
+        }
+        #endif
     }
 
     private func makePlayer() -> SKNode {
@@ -165,7 +177,7 @@ final class PlayScene: SKScene {
         for m in movers { applyAnimation(m.obstacle, to: m.node, at: playTime) }
 
         updateProgress()
-        if level.obstacles.contains(where: { $0.isDeadly(at: playTime) && hits($0.rect(at: playTime)) }) { finish(won: false) }
+        if !godMode, level.obstacles.contains(where: { $0.isDeadly(at: playTime) && hits($0.rect(at: playTime)) }) { finish(won: false) }
         else if player.position.y >= Level.length { finish(won: true) }
     }
 
