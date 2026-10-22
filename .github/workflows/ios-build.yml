@@ -17,14 +17,16 @@ jobs:
       - name: Generate Xcode project
         working-directory: RunnerGame
         run: xcodegen generate
-      - name: Build for iOS Simulator
+      - name: Build and test on iOS Simulator
         working-directory: RunnerGame
         run: |
           set -o pipefail
-          xcodebuild build \
+          UDID=$(xcrun simctl list devices available | grep -m1 "iPhone" | grep -oE '[0-9A-F]{8}-([0-9A-F]{4}-){3}[0-9A-F]{12}')
+          echo "Simulator: $UDID"
+          xcodebuild test \
             -project Runner.xcodeproj \
             -scheme Runner \
-            -sdk iphonesimulator \
-            -destination 'generic/platform=iOS Simulator' \
-            CODE_SIGNING_ALLOWED=NO | tee build.log | grep -E "error:|warning: unre|BUILD" || true
-          grep -q "BUILD SUCCEEDED" build.log
+            -destination "id=$UDID" \
+            CODE_SIGNING_ALLOWED=NO > build.log 2>&1 || true
+          grep -E "error:|Test Case.*(passed|failed)|Executed|TEST (SUCCEEDED|FAILED)|BUILD" build.log | head -80
+          grep -q "TEST SUCCEEDED" build.log

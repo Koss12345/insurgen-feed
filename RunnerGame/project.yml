@@ -8,6 +8,8 @@ targets:
     type: application
     platform: iOS
     sources: [Sources]
+    scheme:
+      testTargets: [RunnerTests]
     info:
       path: Sources/Info.plist
       properties:
@@ -24,3 +26,12 @@ targets:
       TARGETED_DEVICE_FAMILY: "1"
       MARKETING_VERSION: "1.0"
       CURRENT_PROJECT_VERSION: "1"
+  RunnerTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources: [Tests]
+    dependencies:
+      - target: Runner
+    settings:
+      GENERATE_INFOPLIST_FILE: YES
+      SWIFT_VERSION: "5.0"
