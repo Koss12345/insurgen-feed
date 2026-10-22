@@ -51,6 +51,11 @@ final class EditorScene: SKScene {
         hint.zPosition = 20
         cam.addChild(hint)
 
+        let topPanel = SKSpriteNode(color: SKColor(white: 0, alpha: 0.55), size: CGSize(width: size.width, height: 150))
+        topPanel.position = CGPoint(x: 0, y: size.height / 2 - 75)
+        topPanel.zPosition = 15
+        cam.addChild(topPanel)
+
         let bottom = -size.height / 2
         let panel = SKSpriteNode(color: SKColor(white: 0, alpha: 0.6), size: CGSize(width: size.width, height: 190))
         panel.position = CGPoint(x: 0, y: bottom + 95)
