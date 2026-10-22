@@ -40,14 +40,14 @@ final class EditorScene: SKScene {
 
         infoLabel = SKLabelNode(fontNamed: "AvenirNext-Bold")
         infoLabel.fontSize = 17
-        infoLabel.position = CGPoint(x: 0, y: size.height / 2 - 55)
+        infoLabel.position = CGPoint(x: 0, y: size.height / 2 - 100)
         infoLabel.zPosition = 20
         cam.addChild(infoLabel)
 
         let hint = SKLabelNode(fontNamed: "AvenirNext-Medium")
         hint.text = "Тап — поставить или убрать, тяни — листать"
         hint.fontSize = 13
-        hint.position = CGPoint(x: 0, y: size.height / 2 - 78)
+        hint.position = CGPoint(x: 0, y: size.height / 2 - 122)
         hint.zPosition = 20
         cam.addChild(hint)
 

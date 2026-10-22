@@ -60,7 +60,7 @@ final class PlayScene: SKScene {
 
         progressLabel = SKLabelNode(fontNamed: "AvenirNext-Bold")
         progressLabel.fontSize = 28
-        progressLabel.position = CGPoint(x: 0, y: size.height / 2 - 70)
+        progressLabel.position = CGPoint(x: 0, y: size.height / 2 - 95)
         progressLabel.zPosition = 10
         cam.addChild(progressLabel)
 

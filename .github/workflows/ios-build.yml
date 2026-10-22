@@ -60,6 +60,9 @@ jobs:
             sleep 5
             xcrun simctl io "$UDID" screenshot "shots/$name.png"
           }
+          # Первый запуск на холодном симуляторе долгий — прогреваем, иначе меню снимется белым
+          xcrun simctl launch "$UDID" com.example.runner
+          sleep 10
           shot 1_menu
           shot 2_play_podval -screen play -world 0 -autostart -godmode
           shot 3_play_led -screen play -world 1 -autostart -godmode
